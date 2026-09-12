@@ -4,7 +4,7 @@ import { Viewport } from "./src/viewport";
 export default function Canvas() {
   return <CanvasProvider >
     <Viewport>
-      <div>amk</div>
+      <div>amk123</div>
     </Viewport>
   </CanvasProvider>
 }
