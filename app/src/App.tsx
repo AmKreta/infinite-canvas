@@ -123,46 +123,10 @@ function App() {
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (draggingShape !== null) {
-        const deltaX = (e.clientX - lastCursorPos.current.x) * 0.8;
-        const deltaY = (e.clientY - lastCursorPos.current.y) * 0.8;
-
-        const scrollMargin = 50;
-        const scrollSpeed = 5;
-        let canvasDeltaX = 0;
-        let canvasDeltaY = 0;
-
-        if (e.clientX < scrollMargin) {
-          canvasDeltaX = scrollSpeed;
-        } else if (e.clientX > window.innerWidth - scrollMargin) {
-          canvasDeltaX = -scrollSpeed;
-        }
-
-        if (e.clientY < scrollMargin) {
-          canvasDeltaY = scrollSpeed;
-        } else if (e.clientY > window.innerHeight - scrollMargin) {
-          canvasDeltaY = -scrollSpeed;
-        }
-
-        if (canvasDeltaX !== 0 || canvasDeltaY !== 0) {
-          setCanvasOffset((prev) => ({
-            x: prev.x + canvasDeltaX,
-            y: prev.y + canvasDeltaY,
-          }));
-        }
-
-        setShapes((prev) =>
-          prev.map((shape) =>
-            shape.id === draggingShape
-              ? {
-                ...shape,
-                x: shape.x + deltaX,
-                y: shape.y + deltaY,
-              }
-              : shape
-          )
-        );
-
-        lastCursorPos.current = { x: e.clientX, y: e.clientY };
+        // Shape dragging is handled by the global document mousemove
+        // listener below, so it keeps tracking the cursor even if it
+        // leaves this element's bounds mid-drag.
+        return;
       } else if (drawingShapeId) {
         const canvasCoords = getCanvasCoordinates(e.clientX, e.clientY);
         updateDrawingShape(canvasCoords);
@@ -271,8 +235,8 @@ function App() {
         const clientX = e.clientX;
         const clientY = e.clientY;
 
-        const deltaX = (clientX - lastCursorPos.current.x) * 0.8;
-        const deltaY = (clientY - lastCursorPos.current.y) * 0.8;
+        const deltaX = clientX - lastCursorPos.current.x;
+        const deltaY = clientY - lastCursorPos.current.y;
 
         const scrollMargin = 50;
         const scrollSpeed = 5;
