@@ -1,12 +1,11 @@
 {
-  "name": "@infinite-canvas/canvas",
+  "name": "@infinite-canvas/createZustandContext",
   "version": "1.0.0",
-  "description": "canvas lib",
+  "description": "create zustand context",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
     "@infinite-canvas/hooks": "*",
-    "@infinite-canvas/createZustandContext": "*",
     "immer": "^11.1.18",
     "zustand": "^5.0.15"
   },

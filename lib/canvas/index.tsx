@@ -1,3 +1,10 @@
+import { CanvasProvider } from "./src/CanvasContext";
+import { Viewport } from "./src/viewport";
+
 export default function Canvas() {
-  return <div>canvas</div>
+  return <CanvasProvider >
+    <Viewport>
+      <div>amk</div>
+    </Viewport>
+  </CanvasProvider>
 }

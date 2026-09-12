@@ -10,10 +10,11 @@ import Toolbar from "./components/Toolbar";
 import Minimap from "./components/Minimap";
 import { Shape } from "./types";
 import { getRandomColor } from "@infinite-canvas/utils";
+import Canvas from "@infinite-canvas/canvas";
 
 type Mode = "pan" | "draw";
 
-function App() {
+function App1() {
   const [canvasOffset, setCanvasOffset] = useState({
     x: -window.innerWidth,
     y: -window.innerHeight,
@@ -313,7 +314,6 @@ function App() {
       bounds.minY = Math.min(bounds.minY, shape.y);
       bounds.maxY = Math.max(bounds.maxY, shape.y + shape.height);
     });
-    console.log(bounds)
     return {
       width: bounds.maxX - bounds.minX,
       height: bounds.maxY - bounds.minY,
@@ -376,6 +376,10 @@ function App() {
       />
     </>
   );
+}
+
+function App() {
+  return <Canvas />
 }
 
 export default App;
