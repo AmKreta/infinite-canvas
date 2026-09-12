@@ -1,0 +1,1 @@
+export { usePersistentCallback } from "./src/usePersistentCallback";

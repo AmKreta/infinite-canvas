@@ -1,5 +1,6 @@
+export type ShapeId = string;
 export interface Shape {
-  id: string;
+  id: ShapeId;
   type: 'rectangle';
   x: number;
   y: number;
@@ -7,4 +8,9 @@ export interface Shape {
   height: number;
   color: string;
   zIndex: number;
+}
+
+export enum Mode {
+  PAN = "pan",
+  DRAW = "draw",
 }

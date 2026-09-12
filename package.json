@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start:app": "npm run build:lib:canvas && npm start --workspace=app",
-    "build:app": "npm run build --workspace=app",
-    "test:app": "npm test --workspace=app",
-    "eject:app": "npm run eject --workspace=app",
-    "build:lib:canvas": "npm run build --workspace=lib/canvas"
+    "build": "turbo run build",
+    "start:app": "turbo run start --filter=@infinite-canvas/app",
+    "build:app": "turbo run build --filter=@infinite-canvas/app",
+    "test:app": "turbo run test --filter=@infinite-canvas/app",
+    "eject:app": "npm run eject --workspace=app"
   },
+  "devDependencies": {
+    "turbo": "^2.10.12"
+  },
+  "packageManager": "npm@10.8.2",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -43,6 +47,8 @@
   },
   "workspaces": [
     "app",
-    "lib/*"
+    "hooks",
+    "lib/*",
+    "utils/*"
   ]
 }

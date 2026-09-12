@@ -1,12 +1,9 @@
 {
-  "name": "@infinite-canvas/canvas",
+  "name": "@infinite-canvas/hooks",
   "version": "1.0.0",
   "description": "canvas lib",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "dependencies": {
-    "@infinite-canvas/hooks": "*"
-  },
   "scripts": {
     "build": "tsc"
   },
