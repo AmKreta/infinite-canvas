@@ -1,4 +1,5 @@
 import { useCanvasStore } from "../CanvasContext";
+import "./index.css";
 
 export function Viewport({ children }: { children: React.ReactNode }) {
   const mode = useCanvasStore(state => state.mode);

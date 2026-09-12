@@ -6,6 +6,7 @@
     },
     "include": [
         "src",
-        "index.tsx"
+        "index.tsx",
+        "../../types/global.d.ts"
     ]
 }

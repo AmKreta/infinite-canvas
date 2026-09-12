@@ -1,0 +1,17 @@
+.infinite-canvas {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-tertiary);
+  cursor: grab;
+  position: relative;
+  touch-action: none;
+}
+
+.infinite-canvas:active {
+  cursor: grabbing;
+}
+
+.infinite-canvas.draw-mode {
+  cursor: crosshair;
+}
