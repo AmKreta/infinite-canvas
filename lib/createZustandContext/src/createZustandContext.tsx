@@ -21,5 +21,13 @@ export function createZustandContext<State, Props = void>(creator: StoreCreator<
         return useStore(store, selector);
     }
 
-    return [StoreProvider, StoreSelector] as const;
+    function Store(): StoreApi<State> {
+        const store = useContext(StoreContext);
+        if (!store) {
+            throw new Error("Store not found");
+        }
+        return store;
+    }
+
+    return [StoreProvider, StoreSelector, Store] as const;
 }

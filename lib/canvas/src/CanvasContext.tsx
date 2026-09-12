@@ -5,7 +5,7 @@ import { Mode, Shape, ShapeId } from "./types";
 interface CanvasStateType {
     canvasOffset: { x: number, y: number };
     isDragging: boolean;
-    shapes: Map<ShapeId, Shape>;
+    shapes: Shape[];
     draggingShape: string | null;
     mode: Mode;
     drawingShapeId: string | null;
@@ -15,7 +15,7 @@ interface CanvasStateType {
     drawingStartCoords: { x: number, y: number };
     setCanvasOffset: (canvasOffset: { x: number, y: number }) => void;
     setIsDragging: (isDragging: boolean) => void;
-    setShapes: (shapes: Map<ShapeId, Shape>) => void;
+    setShapes: (shapes: Shape[]) => void;
     setDraggingShape: (draggingShape: string | null) => void;
     setMode: (mode: Mode) => void;
     setDrawingShapeId: (drawingShapeId: string | null) => void;
@@ -29,13 +29,13 @@ const canvasStoreCreator = () => createStore<CanvasStateType>((set, get) => ({
     // reactive state
     canvasOffset: { x: 0, y: 0 },
     isDragging: false,
-    shapes: new Map(),
+    shapes: [],
     draggingShape: null,
     mode: Mode.PAN,
     drawingShapeId: null,
     setCanvasOffset: (canvasOffset: { x: number, y: number }) => set({ canvasOffset }),
     setIsDragging: (isDragging: boolean) => set({ isDragging }),
-    setShapes: (shapes: Map<ShapeId, Shape>) => set({ shapes }),
+    setShapes: (shapes: Shape[]) => set({ shapes }),
     setDraggingShape: (draggingShape: string | null) => set({ draggingShape }),
     setMode: (mode: Mode) => set({ mode }),
     setDrawingShapeId: (drawingShapeId: string | null) => set({ drawingShapeId }),
@@ -50,4 +50,4 @@ const canvasStoreCreator = () => createStore<CanvasStateType>((set, get) => ({
     setDrawingStartCoords: (drawingStartCoords: { x: number, y: number }) => get().drawingStartCoords = drawingStartCoords,
 }))
 
-export const [CanvasProvider, useCanvasStore] = createZustandContext<CanvasStateType>(canvasStoreCreator);
+export const [CanvasProvider, useCanvasStore, useCanvasStoreApi] = createZustandContext<CanvasStateType>(canvasStoreCreator);

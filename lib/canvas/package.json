@@ -7,6 +7,7 @@
   "dependencies": {
     "@infinite-canvas/hooks": "*",
     "@infinite-canvas/createZustandContext": "*",
+    "@infinite-canvas/utils":"*",
     "immer": "^11.1.18",
     "zustand": "^5.0.15"
   },
