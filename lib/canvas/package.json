@@ -2,7 +2,8 @@
   "name": "@infinite-canvas/canvas",
   "version": "1.0.0",
   "description": "canvas lib",
-  "entry": "index.tsx",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
   },

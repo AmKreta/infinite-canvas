@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start:app": "npm start --workspace=app",
+    "start:app": "npm run build:lib:canvas && npm start --workspace=app",
     "build:app": "npm run build --workspace=app",
     "test:app": "npm test --workspace=app",
     "eject:app": "npm run eject --workspace=app",
