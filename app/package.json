@@ -4,7 +4,8 @@
   "private": true,
   "dependencies": {
     "@infinite-canvas/canvas": "*",
-     "@infinite-canvas/hooks": "*",
+    "@infinite-canvas/hooks": "*",
+    "@infinite-canvas/utils": "*",
     "react-scripts": "^5.0.1"
   },
   "scripts": {

@@ -9,7 +9,7 @@ import "./App.css";
 import Toolbar from "./components/Toolbar";
 import Minimap from "./components/Minimap";
 import { Shape } from "./types";
-import { getRandomColor } from "./utils/colors";
+import { getRandomColor } from "@infinite-canvas/utils";
 
 type Mode = "pan" | "draw";
 
