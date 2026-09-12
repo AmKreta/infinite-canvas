@@ -47,15 +47,6 @@ function App() {
       });
 
       lastCursorPos.current = { x: e.clientX, y: e.clientY };
-
-      setShapes((prev) => {
-        const maxZ = Math.max(0, ...prev.map((s) => s.zIndex));
-        return prev.map((shape) =>
-          shape.id === shapeId ? { ...shape, zIndex: maxZ + 1 } : shape
-        );
-      });
-
-      lastCursorPos.current = { x: e.clientX, y: e.clientY };
     },
     [mode]
   );

@@ -1,0 +1,10 @@
+{
+  "name": "@infinite-canvas/canvas",
+  "version": "1.0.0",
+  "description": "canvas lib",
+  "entry": "index.tsx",
+  "scripts": {
+    "build": "tsc"
+  },
+  "license": "ISC"
+}

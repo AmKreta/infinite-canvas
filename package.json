@@ -2,6 +2,13 @@
   "name": "infinite-canvas",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "start:app": "npm start --workspace=app",
+    "build:app": "npm run build --workspace=app",
+    "test:app": "npm test --workspace=app",
+    "eject:app": "npm run eject --workspace=app",
+    "build:lib:canvas": "npm run build --workspace=lib/canvas"
+  },
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -13,15 +20,8 @@
     "@types/react-dom": "^19.1.7",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -40,5 +40,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "workspaces": [
+    "app",
+    "lib/*"
+  ]
 }
