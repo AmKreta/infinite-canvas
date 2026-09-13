@@ -1,10 +1,13 @@
 import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useCanvasStore } from "../CanvasContext";
 import { Shape } from "../shape";
 import "./index.css";
 
 export function DrawingArea() {
-  const canvasOffset = useCanvasStore((state) => state.canvasOffset);
+  const canvasOffset = useCanvasStore(
+    useShallow((state) => state.canvasOffset),
+  );
   const shapes = useCanvasStore((state) => state.shapes);
 
   const canvasBounds = useMemo(() => {

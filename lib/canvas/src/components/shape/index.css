@@ -1,0 +1,41 @@
+.shape {
+  position: absolute;
+  background-color: rgba(66, 165, 245, 0.3);
+  border: 2px solid #42a5f5;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
+}
+
+/* Only show move cursor in pan mode */
+.infinite-canvas:not(.draw-mode) .shape {
+  cursor: move;
+}
+
+/* In draw mode, shapes should not intercept pointer events */
+.infinite-canvas.draw-mode .shape {
+  pointer-events: none;
+}
+.shape:hover {
+  background-color: rgba(66, 165, 245, 0.5);
+  border-color: #1e88e5;
+}
+
+.shape.dragging {
+  border-width: 3px;
+  border-color: #000 !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
+
+/* Shape Selection */
+.shape.selected {
+  border-width: 3px;
+  border-style: solid;
+}
+
+.drawing-preview {
+  opacity: 0.7;
+  border-style: dashed;
+}

@@ -1,0 +1,31 @@
+.minimap-container {
+  z-index: 1000;
+  background-color: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--shadow-medium);
+  overflow: hidden;
+  user-select: none;
+}
+
+.minimap {
+  position: relative;
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.minimap-shape {
+  position: absolute;
+  background-color: rgba(66, 165, 245, 0.6);
+  border: 1px solid #42a5f5;
+  pointer-events: none;
+}
+
+.minimap-shape-rectangle {
+  border-radius: 2px;
+}
+
+.minimap-shape-circle {
+  border-radius: 50%;
+}

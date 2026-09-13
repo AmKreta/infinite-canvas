@@ -2,6 +2,7 @@ import type React from "react";
 import { useCallback } from "react";
 import { Mode } from "../../types";
 import { useCanvasStore } from "../CanvasContext";
+import "./index.css";
 
 const Toolbar: React.FC = () => {
   const setMode = useCanvasStore((s) => s.setMode);

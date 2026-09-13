@@ -1,388 +1,389 @@
-import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// import type React from "react";
+// import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import Canvas from "@infinite-canvas/canvas";
-import { getRandomColor } from "@infinite-canvas/utils";
-import Minimap from "./components/Minimap";
-import Toolbar from "./components/Toolbar";
-import type { Shape } from "./types";
 
-type Mode = "pan" | "draw";
+// import { getRandomColor } from "@infinite-canvas/utils";
+// import Minimap from "./components/Minimap";
+// import Toolbar from "./components/Toolbar";
+// import type { Shape } from "./types";
 
-function App() {
-  const [canvasOffset, setCanvasOffset] = useState({
-    x: -window.innerWidth,
-    y: -window.innerHeight,
-  });
-  const [isDragging, setIsDragging] = useState(false);
-  const lastCursorPos = useRef({ x: 0, y: 0 });
-  const [shapes, setShapes] = useState<Shape[]>([]);
-  const [draggingShape, setDraggingShape] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("pan");
-  const drawingStartCoords = useRef({ x: 0, y: 0 });
-  const [drawingShapeId, setDrawingShapeId] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const drawingUpdateRef = useRef<number | null>(null);
+// type Mode = "pan" | "draw";
 
-  const handleShapeMouseDown = useCallback(
-    (e: React.MouseEvent, shapeId: string) => {
-      if (mode === "draw") {
-        return false;
-      }
+// function App() {
+//   const [canvasOffset, setCanvasOffset] = useState({
+//     x: -window.innerWidth,
+//     y: -window.innerHeight,
+//   });
+//   const [isDragging, setIsDragging] = useState(false);
+//   const lastCursorPos = useRef({ x: 0, y: 0 });
+//   const [shapes, setShapes] = useState<Shape[]>([]);
+//   const [draggingShape, setDraggingShape] = useState<string | null>(null);
+//   const [mode, setMode] = useState<Mode>("pan");
+//   const drawingStartCoords = useRef({ x: 0, y: 0 });
+//   const [drawingShapeId, setDrawingShapeId] = useState<string | null>(null);
+//   const containerRef = useRef<HTMLDivElement>(null);
+//   const drawingUpdateRef = useRef<number | null>(null);
 
-      e.stopPropagation();
-      e.preventDefault();
+//   const handleShapeMouseDown = useCallback(
+//     (e: React.MouseEvent, shapeId: string) => {
+//       if (mode === "draw") {
+//         return false;
+//       }
 
-      setDraggingShape(shapeId);
+//       e.stopPropagation();
+//       e.preventDefault();
 
-      setShapes((prev) => {
-        const maxZ = Math.max(0, ...prev.map((s) => s.zIndex));
-        return prev.map((shape) =>
-          shape.id === shapeId ? { ...shape, zIndex: maxZ + 1 } : shape,
-        );
-      });
+//       setDraggingShape(shapeId);
 
-      lastCursorPos.current = { x: e.clientX, y: e.clientY };
-    },
-    [mode],
-  );
+//       setShapes((prev) => {
+//         const maxZ = Math.max(0, ...prev.map((s) => s.zIndex));
+//         return prev.map((shape) =>
+//           shape.id === shapeId ? { ...shape, zIndex: maxZ + 1 } : shape,
+//         );
+//       });
 
-  const getCanvasCoordinates = useCallback(
-    (clientX: number, clientY: number) => ({
-      x: clientX - canvasOffset.x,
-      y: clientY - canvasOffset.y,
-    }),
-    [canvasOffset],
-  );
+//       lastCursorPos.current = { x: e.clientX, y: e.clientY };
+//     },
+//     [mode],
+//   );
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (mode === "draw") {
-        const canvasCoords = getCanvasCoordinates(e.clientX, e.clientY);
-        const newShapeId = `drawing-${Date.now()}`;
-        const newColor = getRandomColor();
+//   const getCanvasCoordinates = useCallback(
+//     (clientX: number, clientY: number) => ({
+//       x: clientX - canvasOffset.x,
+//       y: clientY - canvasOffset.y,
+//     }),
+//     [canvasOffset],
+//   );
 
-        const newShape: Shape = {
-          id: newShapeId,
-          type: "rectangle",
-          x: canvasCoords.x,
-          y: canvasCoords.y,
-          width: 0,
-          height: 0,
-          color: newColor,
-          zIndex:
-            shapes.length > 0
-              ? Math.max(...shapes.map((s) => s.zIndex)) + 1
-              : 1,
-        };
+//   const handleMouseDown = useCallback(
+//     (e: React.MouseEvent) => {
+//       if (mode === "draw") {
+//         const canvasCoords = getCanvasCoordinates(e.clientX, e.clientY);
+//         const newShapeId = `drawing-${Date.now()}`;
+//         const newColor = getRandomColor();
 
-        setShapes((prev) => [...prev, newShape]);
-        setDrawingShapeId(newShapeId);
-        drawingStartCoords.current = canvasCoords;
-        lastCursorPos.current = { x: e.clientX, y: e.clientY };
-      } else if (draggingShape === null) {
-        setIsDragging(true);
-        lastCursorPos.current = { x: e.clientX, y: e.clientY };
-      }
-    },
-    [mode, draggingShape, getCanvasCoordinates, shapes],
-  );
+//         const newShape: Shape = {
+//           id: newShapeId,
+//           type: "rectangle",
+//           x: canvasCoords.x,
+//           y: canvasCoords.y,
+//           width: 0,
+//           height: 0,
+//           color: newColor,
+//           zIndex:
+//             shapes.length > 0
+//               ? Math.max(...shapes.map((s) => s.zIndex)) + 1
+//               : 1,
+//         };
 
-  const updateDrawingShape = useCallback(
-    (canvasCoords: { x: number; y: number }) => {
-      if (!drawingShapeId || drawingUpdateRef.current) {
-        if (drawingUpdateRef.current) {
-          cancelAnimationFrame(drawingUpdateRef.current);
-        }
-      }
+//         setShapes((prev) => [...prev, newShape]);
+//         setDrawingShapeId(newShapeId);
+//         drawingStartCoords.current = canvasCoords;
+//         lastCursorPos.current = { x: e.clientX, y: e.clientY };
+//       } else if (draggingShape === null) {
+//         setIsDragging(true);
+//         lastCursorPos.current = { x: e.clientX, y: e.clientY };
+//       }
+//     },
+//     [mode, draggingShape, getCanvasCoordinates, shapes],
+//   );
 
-      drawingUpdateRef.current = requestAnimationFrame(() => {
-        if (!drawingShapeId) return;
+//   const updateDrawingShape = useCallback(
+//     (canvasCoords: { x: number; y: number }) => {
+//       if (!drawingShapeId || drawingUpdateRef.current) {
+//         if (drawingUpdateRef.current) {
+//           cancelAnimationFrame(drawingUpdateRef.current);
+//         }
+//       }
 
-        const width = Math.abs(canvasCoords.x - drawingStartCoords.current.x);
-        const height = Math.abs(canvasCoords.y - drawingStartCoords.current.y);
-        const x = Math.min(canvasCoords.x, drawingStartCoords.current.x);
-        const y = Math.min(canvasCoords.y, drawingStartCoords.current.y);
+//       drawingUpdateRef.current = requestAnimationFrame(() => {
+//         if (!drawingShapeId) return;
 
-        setShapes((prev) =>
-          prev.map((shape) =>
-            shape.id === drawingShapeId
-              ? { ...shape, x, y, width, height }
-              : shape,
-          ),
-        );
-      });
-    },
-    [drawingShapeId],
-  );
+//         const width = Math.abs(canvasCoords.x - drawingStartCoords.current.x);
+//         const height = Math.abs(canvasCoords.y - drawingStartCoords.current.y);
+//         const x = Math.min(canvasCoords.x, drawingStartCoords.current.x);
+//         const y = Math.min(canvasCoords.y, drawingStartCoords.current.y);
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (draggingShape !== null) {
-        // Shape dragging is handled by the global document mousemove
-        // listener below, so it keeps tracking the cursor even if it
-        // leaves this element's bounds mid-drag.
-        return;
-      } else if (drawingShapeId) {
-        const canvasCoords = getCanvasCoordinates(e.clientX, e.clientY);
-        updateDrawingShape(canvasCoords);
-      } else if (isDragging) {
-        const deltaX = e.clientX - lastCursorPos.current.x;
-        const deltaY = e.clientY - lastCursorPos.current.y;
+//         setShapes((prev) =>
+//           prev.map((shape) =>
+//             shape.id === drawingShapeId
+//               ? { ...shape, x, y, width, height }
+//               : shape,
+//           ),
+//         );
+//       });
+//     },
+//     [drawingShapeId],
+//   );
 
-        setCanvasOffset((prev) => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY,
-        }));
+//   const handleMouseMove = useCallback(
+//     (e: React.MouseEvent) => {
+//       if (draggingShape !== null) {
+//         // Shape dragging is handled by the global document mousemove
+//         // listener below, so it keeps tracking the cursor even if it
+//         // leaves this element's bounds mid-drag.
+//         return;
+//       } else if (drawingShapeId) {
+//         const canvasCoords = getCanvasCoordinates(e.clientX, e.clientY);
+//         updateDrawingShape(canvasCoords);
+//       } else if (isDragging) {
+//         const deltaX = e.clientX - lastCursorPos.current.x;
+//         const deltaY = e.clientY - lastCursorPos.current.y;
 
-        lastCursorPos.current = { x: e.clientX, y: e.clientY };
-      }
-    },
-    [
-      isDragging,
-      draggingShape,
-      drawingShapeId,
-      getCanvasCoordinates,
-      updateDrawingShape,
-    ],
-  );
+//         setCanvasOffset((prev) => ({
+//           x: prev.x + deltaX,
+//           y: prev.y + deltaY,
+//         }));
 
-  const handleMouseUp = useCallback(() => {
-    if (drawingShapeId) {
-      if (drawingUpdateRef.current) {
-        cancelAnimationFrame(drawingUpdateRef.current);
-        drawingUpdateRef.current = null;
-      }
+//         lastCursorPos.current = { x: e.clientX, y: e.clientY };
+//       }
+//     },
+//     [
+//       isDragging,
+//       draggingShape,
+//       drawingShapeId,
+//       getCanvasCoordinates,
+//       updateDrawingShape,
+//     ],
+//   );
 
-      const drawingShape = shapes.find((s) => s.id === drawingShapeId);
-      if (
-        !drawingShape ||
-        drawingShape.width <= 5 ||
-        drawingShape.height <= 5
-      ) {
-        setShapes((prev) => prev.filter((s) => s.id !== drawingShapeId));
-      }
+//   const handleMouseUp = useCallback(() => {
+//     if (drawingShapeId) {
+//       if (drawingUpdateRef.current) {
+//         cancelAnimationFrame(drawingUpdateRef.current);
+//         drawingUpdateRef.current = null;
+//       }
 
-      setDrawingShapeId(null);
-      setMode("pan");
-    }
+//       const drawingShape = shapes.find((s) => s.id === drawingShapeId);
+//       if (
+//         !drawingShape ||
+//         drawingShape.width <= 5 ||
+//         drawingShape.height <= 5
+//       ) {
+//         setShapes((prev) => prev.filter((s) => s.id !== drawingShapeId));
+//       }
 
-    setIsDragging(false);
-    setDraggingShape(null);
-  }, [drawingShapeId, shapes]);
+//       setDrawingShapeId(null);
+//       setMode("pan");
+//     }
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      lastCursorPos.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      };
-    }
-  }, []);
+//     setIsDragging(false);
+//     setDraggingShape(null);
+//   }, [drawingShapeId, shapes]);
 
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      e.preventDefault();
+//   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+//     if (e.touches.length === 1) {
+//       setIsDragging(true);
+//       lastCursorPos.current = {
+//         x: e.touches[0].clientX,
+//         y: e.touches[0].clientY,
+//       };
+//     }
+//   }, []);
 
-      if (e.touches.length === 1 && isDragging) {
-        const deltaX = e.touches[0].clientX - lastCursorPos.current.x;
-        const deltaY = e.touches[0].clientY - lastCursorPos.current.y;
+//   const handleTouchMove = useCallback(
+//     (e: React.TouchEvent) => {
+//       e.preventDefault();
 
-        setCanvasOffset((prev) => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY,
-        }));
+//       if (e.touches.length === 1 && isDragging) {
+//         const deltaX = e.touches[0].clientX - lastCursorPos.current.x;
+//         const deltaY = e.touches[0].clientY - lastCursorPos.current.y;
 
-        lastCursorPos.current = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
-        };
-      }
-    },
-    [isDragging],
-  );
+//         setCanvasOffset((prev) => ({
+//           x: prev.x + deltaX,
+//           y: prev.y + deltaY,
+//         }));
 
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+//         lastCursorPos.current = {
+//           x: e.touches[0].clientX,
+//           y: e.touches[0].clientY,
+//         };
+//       }
+//     },
+//     [isDragging],
+//   );
 
-  useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      if (drawingShapeId) {
-        if (drawingUpdateRef.current) {
-          cancelAnimationFrame(drawingUpdateRef.current);
-          drawingUpdateRef.current = null;
-        }
+//   const handleTouchEnd = useCallback(() => {
+//     setIsDragging(false);
+//   }, []);
 
-        const drawingShape = shapes.find((s) => s.id === drawingShapeId);
-        if (
-          !drawingShape ||
-          drawingShape.width <= 5 ||
-          drawingShape.height <= 5
-        ) {
-          setShapes((prev) => prev.filter((s) => s.id !== drawingShapeId));
-        }
-        setMode("pan");
-      }
-      setIsDragging(false);
-      setDraggingShape(null);
-    };
+//   useEffect(() => {
+//     const handleGlobalMouseUp = () => {
+//       if (drawingShapeId) {
+//         if (drawingUpdateRef.current) {
+//           cancelAnimationFrame(drawingUpdateRef.current);
+//           drawingUpdateRef.current = null;
+//         }
 
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (draggingShape !== null && !drawingShapeId) {
-        const container = containerRef.current;
-        if (!container) return;
+//         const drawingShape = shapes.find((s) => s.id === drawingShapeId);
+//         if (
+//           !drawingShape ||
+//           drawingShape.width <= 5 ||
+//           drawingShape.height <= 5
+//         ) {
+//           setShapes((prev) => prev.filter((s) => s.id !== drawingShapeId));
+//         }
+//         setMode("pan");
+//       }
+//       setIsDragging(false);
+//       setDraggingShape(null);
+//     };
 
-        const clientX = e.clientX;
-        const clientY = e.clientY;
+//     const handleGlobalMouseMove = (e: MouseEvent) => {
+//       if (draggingShape !== null && !drawingShapeId) {
+//         const container = containerRef.current;
+//         if (!container) return;
 
-        const deltaX = clientX - lastCursorPos.current.x;
-        const deltaY = clientY - lastCursorPos.current.y;
+//         const clientX = e.clientX;
+//         const clientY = e.clientY;
 
-        const scrollMargin = 50;
-        const scrollSpeed = 5;
+//         const deltaX = clientX - lastCursorPos.current.x;
+//         const deltaY = clientY - lastCursorPos.current.y;
 
-        let canvasDeltaX = 0;
-        let canvasDeltaY = 0;
+//         const scrollMargin = 50;
+//         const scrollSpeed = 5;
 
-        if (clientX < scrollMargin) {
-          canvasDeltaX = scrollSpeed;
-        } else if (clientX > window.innerWidth - scrollMargin) {
-          canvasDeltaX = -scrollSpeed;
-        }
+//         let canvasDeltaX = 0;
+//         let canvasDeltaY = 0;
 
-        if (clientY < scrollMargin) {
-          canvasDeltaY = scrollSpeed;
-        } else if (clientY > window.innerHeight - scrollMargin) {
-          canvasDeltaY = -scrollSpeed;
-        }
+//         if (clientX < scrollMargin) {
+//           canvasDeltaX = scrollSpeed;
+//         } else if (clientX > window.innerWidth - scrollMargin) {
+//           canvasDeltaX = -scrollSpeed;
+//         }
 
-        if (canvasDeltaX !== 0 || canvasDeltaY !== 0) {
-          setCanvasOffset((prev) => ({
-            x: prev.x + canvasDeltaX,
-            y: prev.y + canvasDeltaY,
-          }));
-        }
+//         if (clientY < scrollMargin) {
+//           canvasDeltaY = scrollSpeed;
+//         } else if (clientY > window.innerHeight - scrollMargin) {
+//           canvasDeltaY = -scrollSpeed;
+//         }
 
-        setShapes((prev) =>
-          prev.map((shape) =>
-            shape.id === draggingShape
-              ? {
-                  ...shape,
-                  x: shape.x + deltaX,
-                  y: shape.y + deltaY,
-                }
-              : shape,
-          ),
-        );
+//         if (canvasDeltaX !== 0 || canvasDeltaY !== 0) {
+//           setCanvasOffset((prev) => ({
+//             x: prev.x + canvasDeltaX,
+//             y: prev.y + canvasDeltaY,
+//           }));
+//         }
 
-        lastCursorPos.current = { x: clientX, y: clientY };
-      }
-    };
+//         setShapes((prev) =>
+//           prev.map((shape) =>
+//             shape.id === draggingShape
+//               ? {
+//                   ...shape,
+//                   x: shape.x + deltaX,
+//                   y: shape.y + deltaY,
+//                 }
+//               : shape,
+//           ),
+//         );
 
-    document.addEventListener("mouseup", handleGlobalMouseUp);
-    document.addEventListener("mousemove", handleGlobalMouseMove);
+//         lastCursorPos.current = { x: clientX, y: clientY };
+//       }
+//     };
 
-    return () => {
-      document.removeEventListener("mouseup", handleGlobalMouseUp);
-      document.removeEventListener("mousemove", handleGlobalMouseMove);
-    };
-  }, [drawingShapeId, draggingShape, shapes]);
+//     document.addEventListener("mouseup", handleGlobalMouseUp);
+//     document.addEventListener("mousemove", handleGlobalMouseMove);
 
-  const handleShapeSelect = useCallback(() => {
-    setMode("draw");
-  }, []);
+//     return () => {
+//       document.removeEventListener("mouseup", handleGlobalMouseUp);
+//       document.removeEventListener("mousemove", handleGlobalMouseMove);
+//     };
+//   }, [drawingShapeId, draggingShape, shapes]);
 
-  const handleMinimapPositionChange = useCallback(
-    (newPosition: { x: number; y: number }) => {
-      setCanvasOffset(newPosition);
-    },
-    [],
-  );
+//   const handleShapeSelect = useCallback(() => {
+//     setMode("draw");
+//   }, []);
 
-  const canvasBounds = useMemo(() => {
-    const bounds = {
-      minX: -window.innerWidth,
-      maxX: window.innerWidth * 2,
-      minY: -window.innerHeight,
-      maxY: window.innerHeight * 2,
-    };
+//   const handleMinimapPositionChange = useCallback(
+//     (newPosition: { x: number; y: number }) => {
+//       setCanvasOffset(newPosition);
+//     },
+//     [],
+//   );
 
-    shapes.forEach((shape) => {
-      bounds.minX = Math.min(bounds.minX, shape.x);
-      bounds.maxX = Math.max(bounds.maxX, shape.x + shape.width);
-      bounds.minY = Math.min(bounds.minY, shape.y);
-      bounds.maxY = Math.max(bounds.maxY, shape.y + shape.height);
-    });
-    return {
-      width: bounds.maxX - bounds.minX,
-      height: bounds.maxY - bounds.minY,
-    };
-  }, [shapes]);
+//   const canvasBounds = useMemo(() => {
+//     const bounds = {
+//       minX: -window.innerWidth,
+//       maxX: window.innerWidth * 2,
+//       minY: -window.innerHeight,
+//       maxY: window.innerHeight * 2,
+//     };
 
-  return (
-    <>
-      <Toolbar
-        onShapeSelect={handleShapeSelect}
-        onReset={() => {
-          setShapes([]);
-        }}
-      />
+//     shapes.forEach((shape) => {
+//       bounds.minX = Math.min(bounds.minX, shape.x);
+//       bounds.maxX = Math.max(bounds.maxX, shape.x + shape.width);
+//       bounds.minY = Math.min(bounds.minY, shape.y);
+//       bounds.maxY = Math.max(bounds.maxY, shape.y + shape.height);
+//     });
+//     return {
+//       width: bounds.maxX - bounds.minX,
+//       height: bounds.maxY - bounds.minY,
+//     };
+//   }, [shapes]);
 
-      <div
-        className={`infinite-canvas ${mode === "draw" ? "draw-mode" : ""}`}
-        ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div
-          className="canvas-content"
-          style={{
-            transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)`,
-            width: canvasBounds.width,
-            height: canvasBounds.height,
-            border: "10px solid red",
-          }}
-        >
-          {shapes.map((shape) => (
-            <div
-              key={shape.id}
-              className={`shape shape-${shape.type} ${
-                draggingShape === shape.id ? "dragging" : ""
-              } ${drawingShapeId === shape.id ? "drawing-preview" : ""}`}
-              style={{
-                left: shape.x,
-                top: shape.y,
-                width: shape.width,
-                height: shape.height,
-                borderRadius: "8px",
-                backgroundColor: shape.color,
-                borderColor: shape.color,
-                zIndex: shape.zIndex,
-              }}
-              onMouseDown={(e) => handleShapeMouseDown(e, shape.id)}
-            />
-          ))}
-        </div>
-      </div>
+//   return (
+//     <>
+//       <Toolbar
+//         onShapeSelect={handleShapeSelect}
+//         onReset={() => {
+//           setShapes([]);
+//         }}
+//       />
 
-      <Minimap
-        shapes={shapes}
-        canvasPosition={canvasOffset}
-        onPositionChange={handleMinimapPositionChange}
-        viewportSize={{ width: window.innerWidth, height: window.innerHeight }}
-      />
-    </>
-  );
-}
+//       <div
+//         className={`infinite-canvas ${mode === "draw" ? "draw-mode" : ""}`}
+//         ref={containerRef}
+//         onMouseDown={handleMouseDown}
+//         onMouseMove={handleMouseMove}
+//         onMouseUp={handleMouseUp}
+//         onTouchStart={handleTouchStart}
+//         onTouchMove={handleTouchMove}
+//         onTouchEnd={handleTouchEnd}
+//       >
+//         <div
+//           className="canvas-content"
+//           style={{
+//             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)`,
+//             width: canvasBounds.width,
+//             height: canvasBounds.height,
+//             border: "10px solid red",
+//           }}
+//         >
+//           {shapes.map((shape) => (
+//             <div
+//               key={shape.id}
+//               className={`shape shape-${shape.type} ${
+//                 draggingShape === shape.id ? "dragging" : ""
+//               } ${drawingShapeId === shape.id ? "drawing-preview" : ""}`}
+//               style={{
+//                 left: shape.x,
+//                 top: shape.y,
+//                 width: shape.width,
+//                 height: shape.height,
+//                 borderRadius: "8px",
+//                 backgroundColor: shape.color,
+//                 borderColor: shape.color,
+//                 zIndex: shape.zIndex,
+//               }}
+//               onMouseDown={(e) => handleShapeMouseDown(e, shape.id)}
+//             />
+//           ))}
+//         </div>
+//       </div>
+
+//       <Minimap
+//         shapes={shapes}
+//         canvasPosition={canvasOffset}
+//         onPositionChange={handleMinimapPositionChange}
+//         viewportSize={{ width: window.innerWidth, height: window.innerHeight }}
+//       />
+//     </>
+//   );
+// }
 
 function App1() {
   return <Canvas />;
 }
 
-export default App;
+export default App1;
