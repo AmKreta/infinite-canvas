@@ -1,14 +1,20 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useCanvasStore } from "../CanvasContext";
+import { useCanvasStore, useCanvasStoreApi } from "../CanvasContext";
 import { Shape } from "../shape";
 import "./index.css";
+import { Mode } from "../../types";
+import { getShapeMaxZIndex } from "../../utils/maxShapeZIndex";
 
 export function DrawingArea() {
   const canvasOffset = useCanvasStore(
     useShallow((state) => state.canvasOffset),
   );
   const shapes = useCanvasStore((state) => state.shapes);
+  const setDraggingShape = useCanvasStore((s) => s.setDraggingShape);
+  const setShapes = useCanvasStore((s) => s.setShapes);
+  const setlastCursorPos = useCanvasStore((s) => s.setLastCursorPos);
+  const canvasStore = useCanvasStoreApi();
 
   const canvasBounds = useMemo(() => {
     const bounds = {
@@ -30,6 +36,27 @@ export function DrawingArea() {
     };
   }, [shapes]);
 
+  const handleShapeMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      const id = (e.target as HTMLDivElement).id;
+      if (canvasStore.getState().mode === Mode.DRAW || !id) {
+        return;
+      }
+      e.stopPropagation();
+      e.preventDefault();
+      setDraggingShape(id);
+      const shapes = canvasStore.getState().shapes;
+      const maxZIndex = getShapeMaxZIndex(shapes);
+      setShapes(
+        shapes.map((shape) =>
+          shape.id === id ? { ...shape, zIndex: maxZIndex + 1 } : shape,
+        ),
+      );
+      setlastCursorPos({ x: e.clientX, y: e.clientY });
+    },
+    [canvasStore, setDraggingShape, setShapes, setlastCursorPos],
+  );
+
   return (
     <div
       className="canvas-content"
@@ -40,7 +67,11 @@ export function DrawingArea() {
       }}
     >
       {shapes.map((shape) => (
-        <Shape key={shape.id} {...shape} />
+        <Shape
+          key={shape.id}
+          {...shape}
+          onShapeMouseDown={handleShapeMouseDown}
+        />
       ))}
     </div>
   );

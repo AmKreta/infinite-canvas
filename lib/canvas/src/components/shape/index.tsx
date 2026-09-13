@@ -1,9 +1,12 @@
 import type React from "react";
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import "./index.css";
-import { Mode, type Shape as ShapeProps } from "../../types";
-import { getShapeMaxZIndex } from "../../utils/maxShapeZIndex";
-import { useCanvasStore, useCanvasStoreApi } from "../CanvasContext";
+import type { Shape as ShapeType } from "../../types";
+import { useCanvasStore } from "../CanvasContext";
+
+type ShapeProps = ShapeType & {
+  onShapeMouseDown: (e: React.MouseEvent) => unknown;
+};
 
 const _Shape: React.FC<ShapeProps> = ({
   id,
@@ -14,33 +17,10 @@ const _Shape: React.FC<ShapeProps> = ({
   height,
   color,
   zIndex,
+  onShapeMouseDown,
 }) => {
-  const setDraggingShape = useCanvasStore((s) => s.setDraggingShape);
-  const setShapes = useCanvasStore((s) => s.setShapes);
-  const setlastCursorPos = useCanvasStore((s) => s.setLastCursorPos);
   const isDragging = useCanvasStore((s) => s.draggingShape === id);
   const isDrawingPreview = useCanvasStore((s) => s.drawingShapeId === id);
-  const canvasStore = useCanvasStoreApi();
-
-  const handleShapeMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (canvasStore.getState().mode === Mode.DRAW) {
-        return false;
-      }
-      e.stopPropagation();
-      e.preventDefault();
-      setDraggingShape(id);
-      const shapes = canvasStore.getState().shapes;
-      const maxZIndex = getShapeMaxZIndex(shapes);
-      setShapes(
-        shapes.map((shape) =>
-          shape.id === id ? { ...shape, zIndex: maxZIndex + 1 } : shape,
-        ),
-      );
-      setlastCursorPos({ x: e.clientX, y: e.clientY });
-    },
-    [canvasStore, setDraggingShape, setShapes, setlastCursorPos, id],
-  );
 
   return (
     <div
@@ -55,7 +35,8 @@ const _Shape: React.FC<ShapeProps> = ({
         borderColor: color,
         zIndex: zIndex,
       }}
-      onMouseDown={handleShapeMouseDown}
+      id={id}
+      onMouseDown={onShapeMouseDown}
     />
   );
 };
