@@ -1,7 +1,7 @@
 // import type React from "react";
 // import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import Canvas from "@infinite-canvas/canvas";
+import { Canvas, CanvasProvider } from "@infinite-canvas/canvas";
 
 // import { getRandomColor } from "@infinite-canvas/utils";
 // import Minimap from "./components/Minimap";
@@ -383,7 +383,11 @@ import Canvas from "@infinite-canvas/canvas";
 // }
 
 function App1() {
-  return <Canvas />;
+  return (
+    <CanvasProvider>
+      <Canvas />
+    </CanvasProvider>
+  );
 }
 
 export default App1;
