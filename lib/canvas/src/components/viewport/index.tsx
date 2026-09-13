@@ -1,21 +1,9 @@
 import { getRandomColor } from "@infinite-canvas/utils";
 import { useCanvasStore, useCanvasStoreApi } from "../CanvasContext";
 import { useCallback, useEffect } from "react";
-import { Mode, Shape } from "../types";
+import { Mode, Shape } from "../../types";
 import "./index.css";
-
-const getMaxZIndex = (shapes: Shape[]) => {
-  let maxZIndex = 0;
-  if (shapes.length === 0) {
-    return maxZIndex;
-  }
-  shapes.forEach((shape) => {
-    if (shape.zIndex > maxZIndex) {
-      maxZIndex = shape.zIndex;
-    }   
-  });
-  return maxZIndex;
-}
+import { getShapeMaxZIndex } from "../../utils/maxShapeZIndex";
 
 export function Viewport({ children }: { children: React.ReactNode }) {
   const mode = useCanvasStore(state => state.mode);
@@ -62,11 +50,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         const height = Math.abs(canvasCoords.y - drawingStartCoords.y);
         const x = Math.min(canvasCoords.x, drawingStartCoords.x);
         const y = Math.min(canvasCoords.y, drawingStartCoords.y);
-        const shapeIndex = shapes.findIndex(shape => shape.id === drawingShapeId);
-        if (shapeIndex !== -1) {
-          shapes[shapeIndex] = { ...shapes[shapeIndex], x, y, width, height };
-          setShapes([...shapes]);
-        }
+        setShapes(shapes.map(s=>s.id===drawingShapeId ? {...s,  x, y, width, height} : s))
       });
 
       setDrawingUpdate(_drawingUpdate);
@@ -88,7 +72,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
           width: 0,
           height: 0,
           color: newColor,
-          zIndex: getMaxZIndex(shapes) + 1,
+          zIndex: getShapeMaxZIndex(shapes) + 1,
         };
         setShapes([ ...shapes, newShape ]);
         setDrawingShapeId(newShapeId);
@@ -251,11 +235,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
             y: canvasOffset.y + canvasDeltaY,
           });
         }
-        const shapeIndex = shapes.findIndex(shape => shape.id === draggingShape);
-        if (shapeIndex !== -1) {
-          shapes[shapeIndex] = { ...shapes[shapeIndex], x: shapes[shapeIndex].x + deltaX, y: shapes[shapeIndex].y + deltaY };
-          setShapes([...shapes]);
-        }
+        setShapes(shapes.map(s=>s.id===draggingShape ? ({...s, x: s.x + deltaX, y: s.y + deltaY}) : s))
         setLastCursorPos({ x: clientX, y: clientY });
       }
     };

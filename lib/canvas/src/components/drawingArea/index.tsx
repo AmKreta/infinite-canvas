@@ -1,7 +1,9 @@
 import { useMemo } from "react";
-import { useCanvasStore } from "./CanvasContext";
+import { useCanvasStore } from "../CanvasContext";
+import { Shape } from "../shape";
+import "./index.css";
 
-export function DrawingArea({ children }: { children: React.ReactNode }) {
+export function DrawingArea() {
     const canvasOffset = useCanvasStore(state => state.canvasOffset);
     const shapes = useCanvasStore(state => state.shapes);
 
@@ -25,7 +27,6 @@ export function DrawingArea({ children }: { children: React.ReactNode }) {
         };
       }, [shapes]);
 
-
     return <div
         className="canvas-content"
         style={{
@@ -33,5 +34,7 @@ export function DrawingArea({ children }: { children: React.ReactNode }) {
             width: canvasBounds.width,
             height: canvasBounds.height,
         }}
-    >{children}</div>
+    >
+      {shapes.map(shape=><Shape key={shape.id} {...shape}/>)}
+    </div>
 }

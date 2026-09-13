@@ -1,6 +1,6 @@
 import { createZustandContext } from "@infinite-canvas/createZustandContext";
 import { createStore } from "zustand";
-import { Mode, Shape, ShapeId } from "./types";
+import { Mode, Shape, ShapeId } from "../types";
 
 interface CanvasStateType {
     canvasOffset: { x: number, y: number };

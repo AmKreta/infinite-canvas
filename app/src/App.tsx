@@ -14,7 +14,7 @@ import Canvas from "@infinite-canvas/canvas";
 
 type Mode = "pan" | "draw";
 
-function App1() {
+function App() {
   const [canvasOffset, setCanvasOffset] = useState({
     x: -window.innerWidth,
     y: -window.innerHeight,
@@ -378,8 +378,8 @@ function App1() {
   );
 }
 
-function App() {
+function App1() {
   return <Canvas />
 }
 
-export default App;
+export default App1;

@@ -1,10 +1,13 @@
-import { CanvasProvider } from "./src/CanvasContext";
-import { Viewport } from "./src/viewport";
+import { CanvasProvider } from "./src/components/CanvasContext";
+import { DrawingArea } from "./src/components/drawingArea";
+import Toolbar from "./src/components/toolbar";
+import { Viewport } from "./src/components/viewport";
 
 export default function Canvas() {
   return <CanvasProvider >
     <Viewport>
-      <div>amk123</div>
+      <Toolbar />
+      <DrawingArea />
     </Viewport>
   </CanvasProvider>
 }
