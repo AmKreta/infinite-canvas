@@ -6,9 +6,21 @@
     "build": "turbo run build",
     "start:app": "turbo run start --filter=@infinite-canvas/app",
     "build:app": "turbo run build --filter=@infinite-canvas/app",
-    "test:app": "turbo run test --filter=@infinite-canvas/app"
+    "test:app": "turbo run test --filter=@infinite-canvas/app",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "check": "biome check --write .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "turbo": "^2.10.12"
   },
   "packageManager": "npm@10.8.2",

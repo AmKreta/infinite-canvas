@@ -1,33 +1,38 @@
 import { getRandomColor } from "@infinite-canvas/utils";
-import { useCanvasStore, useCanvasStoreApi } from "../CanvasContext";
 import { useCallback, useEffect } from "react";
-import { Mode, Shape } from "../../types";
+import { Mode, type Shape } from "../../types";
 import { getShapeMaxZIndex } from "../../utils/maxShapeZIndex";
+import { useCanvasStore, useCanvasStoreApi } from "../CanvasContext";
 import "./index.css";
 
 export function Viewport({ children }: { children: React.ReactNode }) {
-  const mode = useCanvasStore(state => state.mode);
-  const shapes = useCanvasStore(state => state.shapes);
-  const drawingUpdate = useCanvasStore(state => state.drawingUpdate);
-  const setContainer = useCanvasStore(state => state.setContainer);
-  const setCanvasOffset = useCanvasStore(state => state.setCanvasOffset);
-  const setShapes = useCanvasStore(state => state.setShapes);
-  const setDrawingShapeId = useCanvasStore(state => state.setDrawingShapeId);
-  const setDrawindStartCoords = useCanvasStore(state => state.setDrawingStartCoords);
-  const setLastCursorPos = useCanvasStore(state => state.setLastCursorPos);
-  const setIsDragging = useCanvasStore(state => state.setIsDragging);
-  const setDraggingShape = useCanvasStore(state => state.setDraggingShape);
-  const setDrawingUpdate = useCanvasStore(state => state.setDrawingUpdate);
-  const setMode = useCanvasStore(state => state.setMode);
-  const canvasStore = useCanvasStoreApi();  
+  const mode = useCanvasStore((state) => state.mode);
+  const shapes = useCanvasStore((state) => state.shapes);
+  const drawingUpdate = useCanvasStore((state) => state.drawingUpdate);
+  const setContainer = useCanvasStore((state) => state.setContainer);
+  const setCanvasOffset = useCanvasStore((state) => state.setCanvasOffset);
+  const setShapes = useCanvasStore((state) => state.setShapes);
+  const setDrawingShapeId = useCanvasStore((state) => state.setDrawingShapeId);
+  const setDrawindStartCoords = useCanvasStore(
+    (state) => state.setDrawingStartCoords,
+  );
+  const setLastCursorPos = useCanvasStore((state) => state.setLastCursorPos);
+  const setIsDragging = useCanvasStore((state) => state.setIsDragging);
+  const setDraggingShape = useCanvasStore((state) => state.setDraggingShape);
+  const setDrawingUpdate = useCanvasStore((state) => state.setDrawingUpdate);
+  const setMode = useCanvasStore((state) => state.setMode);
+  const canvasStore = useCanvasStoreApi();
 
-  const getCanvasCoordinates = useCallback((clientX: number, clientY: number) => {
-    const canvasOffset = canvasStore.getState().canvasOffset;
-    return {
-      x: clientX - canvasOffset.x,
-      y: clientY - canvasOffset.y,
-    };
-  },[]);
+  const getCanvasCoordinates = useCallback(
+    (clientX: number, clientY: number) => {
+      const canvasOffset = canvasStore.getState().canvasOffset;
+      return {
+        x: clientX - canvasOffset.x,
+        y: clientY - canvasOffset.y,
+      };
+    },
+    [canvasStore.getState],
+  );
 
   const updateDrawingShape = useCallback(
     (canvasCoords: { x: number; y: number }) => {
@@ -37,7 +42,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
 
       const drawingShapeId = canvasStore.getState().drawingShapeId;
 
-      if(!drawingShapeId ){
+      if (!drawingShapeId) {
         return;
       }
 
@@ -48,12 +53,16 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         const height = Math.abs(canvasCoords.y - drawingStartCoords.y);
         const x = Math.min(canvasCoords.x, drawingStartCoords.x);
         const y = Math.min(canvasCoords.y, drawingStartCoords.y);
-        setShapes(shapes.map(s=>s.id===drawingShapeId ? {...s,  x, y, width, height} : s))
+        setShapes(
+          shapes.map((s) =>
+            s.id === drawingShapeId ? { ...s, x, y, width, height } : s,
+          ),
+        );
       });
 
       setDrawingUpdate(_drawingUpdate);
     },
-    [shapes]
+    [shapes, setShapes, canvasStore.getState, drawingUpdate, setDrawingUpdate],
   );
 
   const handleMouseDown = useCallback(
@@ -72,7 +81,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
           color: newColor,
           zIndex: getShapeMaxZIndex(shapes) + 1,
         };
-        setShapes([ ...shapes, newShape ]);
+        setShapes([...shapes, newShape]);
         setDrawingShapeId(newShapeId);
         setDrawindStartCoords(canvasCoords);
         return;
@@ -83,7 +92,17 @@ export function Viewport({ children }: { children: React.ReactNode }) {
       }
       setLastCursorPos({ x: e.clientX, y: e.clientY });
     },
-    [mode, getCanvasCoordinates, shapes]
+    [
+      mode,
+      getCanvasCoordinates,
+      shapes,
+      canvasStore.getState,
+      setDrawindStartCoords,
+      setDrawingShapeId,
+      setIsDragging,
+      setLastCursorPos,
+      setShapes,
+    ],
   );
 
   const handleMouseMove = useCallback(
@@ -105,7 +124,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
       if (isDragging) {
         const lastCursorPos = canvasStore.getState().lastCursorPos;
         const canvasOffset = canvasStore.getState().canvasOffset;
-        
+
         const deltaX = e.clientX - lastCursorPos.x;
         const deltaY = e.clientY - lastCursorPos.y;
 
@@ -117,7 +136,13 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         setLastCursorPos({ x: e.clientX, y: e.clientY });
       }
     },
-    [getCanvasCoordinates, updateDrawingShape]
+    [
+      getCanvasCoordinates,
+      updateDrawingShape,
+      canvasStore.getState,
+      setCanvasOffset,
+      setLastCursorPos,
+    ],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -128,13 +153,13 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         setDrawingUpdate(null);
       }
 
-      const drawingShape = shapes.find(shape => shape.id === drawingShapeId);
+      const drawingShape = shapes.find((shape) => shape.id === drawingShapeId);
       if (
         !drawingShape ||
         drawingShape.width <= 5 ||
         drawingShape.height <= 5
       ) {
-        setShapes(shapes.filter(shape => shape.id !== drawingShapeId));
+        setShapes(shapes.filter((shape) => shape.id !== drawingShapeId));
       }
 
       setDrawingShapeId(null);
@@ -143,17 +168,30 @@ export function Viewport({ children }: { children: React.ReactNode }) {
 
     setIsDragging(false);
     setDraggingShape(null);
-  }, [shapes]);
+  }, [
+    shapes,
+    canvasStore.getState,
+    drawingUpdate,
+    setDraggingShape,
+    setDrawingShapeId,
+    setDrawingUpdate,
+    setIsDragging,
+    setMode,
+    setShapes,
+  ]);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setLastCursorPos({
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      });
-    }
-  }, []);
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 1) {
+        setIsDragging(true);
+        setLastCursorPos({
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+        });
+      }
+    },
+    [setIsDragging, setLastCursorPos],
+  );
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
@@ -177,7 +215,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         });
       }
     },
-    [setCanvasOffset, setLastCursorPos]
+    [setCanvasOffset, setLastCursorPos, canvasStore.getState],
   );
 
   const handleTouchEnd = useCallback(() => {
@@ -199,7 +237,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
           drawingShape.width <= 5 ||
           drawingShape.height <= 5
         ) {
-          setShapes(shapes.filter(shape => shape.id !== drawingShapeId));
+          setShapes(shapes.filter((shape) => shape.id !== drawingShapeId));
         }
         setMode(Mode.PAN);
       }
@@ -246,7 +284,13 @@ export function Viewport({ children }: { children: React.ReactNode }) {
             y: canvasOffset.y + canvasDeltaY,
           });
         }
-        setShapes(shapes.map(s=>s.id===draggingShape ? ({...s, x: s.x + deltaX, y: s.y + deltaY}) : s))
+        setShapes(
+          shapes.map((s) =>
+            s.id === draggingShape
+              ? { ...s, x: s.x + deltaX, y: s.y + deltaY }
+              : s,
+          ),
+        );
         setLastCursorPos({ x: clientX, y: clientY });
       }
     };
@@ -258,18 +302,31 @@ export function Viewport({ children }: { children: React.ReactNode }) {
       document.removeEventListener("mouseup", handleGlobalMouseUp);
       document.removeEventListener("mousemove", handleGlobalMouseMove);
     };
-  }, [shapes]);
+  }, [
+    shapes,
+    canvasStore.getState,
+    drawingUpdate,
+    setCanvasOffset,
+    setDraggingShape,
+    setDrawingUpdate,
+    setIsDragging,
+    setLastCursorPos,
+    setMode,
+    setShapes,
+  ]);
 
-  return <div
-    className={`infinite-canvas ${mode === "draw" ? "draw-mode" : ""}`}
-    ref={setContainer}
-    onMouseDown={handleMouseDown}
-    onMouseMove={handleMouseMove}
-    onMouseUp={handleMouseUp}
-    onTouchStart={handleTouchStart}
-    onTouchMove={handleTouchMove}
-    onTouchEnd={handleTouchEnd}
-  >
-    {children}
-  </div>
+  return (
+    <div
+      className={`infinite-canvas ${mode === "draw" ? "draw-mode" : ""}`}
+      ref={setContainer}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {children}
+    </div>
+  );
 }

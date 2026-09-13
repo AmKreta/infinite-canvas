@@ -1,3 +1,5 @@
-import { type StoreApi } from 'zustand';
+import type { StoreApi } from "zustand";
 
-export type StoreCreator<State, Props = void> = (initialState?: Props) => StoreApi<State>;
+export type StoreCreator<State, Props = void> = (
+  initialState?: Props,
+) => StoreApi<State>;

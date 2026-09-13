@@ -1,5 +1,6 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Shape } from '../types';
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
+import type { Shape } from "../types";
 
 interface MinimapProps {
   shapes: Shape[];
@@ -76,7 +77,7 @@ const Minimap: React.FC<MinimapProps> = ({
   const contentBounds = getContentBounds();
   const minimapScale = Math.min(
     minimapSize.width / contentBounds.width,
-    minimapSize.height / contentBounds.height
+    minimapSize.height / contentBounds.height,
   );
 
   const handleMinimapMouseDown = useCallback((e: React.MouseEvent) => {
@@ -99,7 +100,7 @@ const Minimap: React.FC<MinimapProps> = ({
 
       lastPosition.current = { x: e.clientX, y: e.clientY };
     },
-    [isDraggingMinimap]
+    [isDraggingMinimap],
   );
 
   const handleMinimapMouseUp = useCallback(() => {

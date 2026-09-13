@@ -9,7 +9,7 @@
   --border-hover: #606060;
   --shadow-light: rgba(0, 0, 0, 0.3);
   --shadow-medium: rgba(0, 0, 0, 0.4);
-  --accent-green: #4CAF50;
+  --accent-green: #4caf50;
   --accent-green-hover: #45a049;
 }
 
@@ -19,7 +19,8 @@
   box-sizing: border-box;
 }
 
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -27,7 +28,9 @@ body, html {
   overflow: hidden;
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 #root {
@@ -60,7 +63,8 @@ body, html {
   backdrop-filter: blur(10px);
 }
 
-.create-btn, .reset-btn {
+.create-btn,
+.reset-btn {
   padding: 10px;
   color: white;
   border: none;
@@ -77,12 +81,12 @@ body, html {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-
 .reset-btn {
   background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
 }
 
-.create-btn:hover, .reset-btn:hover {
+.create-btn:hover,
+.reset-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px var(--shadow-medium);
 }
@@ -91,11 +95,9 @@ body, html {
   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
-
 .reset-btn:hover {
   background: linear-gradient(135deg, #26d0ce 0%, #2a9d8f 100%);
 }
-
 
 .shape-selector {
   position: absolute;
@@ -142,12 +144,14 @@ body, html {
   border-color: transparent;
 }
 
-
 .shape {
   position: absolute;
   background-color: rgba(66, 165, 245, 0.3);
-  border: 2px solid #42A5F5;
-  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  border: 2px solid #42a5f5;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
 }
 
 /* Only show move cursor in pan mode */
@@ -161,7 +165,7 @@ body, html {
 }
 .shape:hover {
   background-color: rgba(66, 165, 245, 0.5);
-  border-color: #1E88E5;
+  border-color: #1e88e5;
 }
 
 .shape-rectangle {
@@ -205,7 +209,7 @@ body, html {
 .minimap-shape {
   position: absolute;
   background-color: rgba(66, 165, 245, 0.6);
-  border: 1px solid #42A5F5;
+  border: 1px solid #42a5f5;
   pointer-events: none;
 }
 
@@ -307,5 +311,3 @@ body, html {
   background-color: #d32f2f;
   transform: scale(1.05);
 }
-
-

@@ -7,6 +7,7 @@
   "dependencies": {
     "@infinite-canvas/hooks": "*",
     "immer": "^11.1.18",
+    "react": "^19.1.1",
     "zustand": "^5.0.15"
   },
   "scripts": {

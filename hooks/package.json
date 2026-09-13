@@ -4,6 +4,9 @@
   "description": "canvas lib",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "dependencies": {
+    "react": "^19.1.1"
+  },
   "scripts": {
     "build": "tsc"
   },

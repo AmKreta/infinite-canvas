@@ -1,7 +1,7 @@
 export type ShapeId = string;
 export interface Shape {
   id: ShapeId;
-  type: 'rectangle';
+  type: "rectangle";
   x: number;
   y: number;
   width: number;

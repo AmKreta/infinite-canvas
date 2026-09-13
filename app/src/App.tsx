@@ -1,16 +1,11 @@
-import React, {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import Toolbar from "./components/Toolbar";
-import Minimap from "./components/Minimap";
-import { Shape } from "./types";
-import { getRandomColor } from "@infinite-canvas/utils";
 import Canvas from "@infinite-canvas/canvas";
+import { getRandomColor } from "@infinite-canvas/utils";
+import Minimap from "./components/Minimap";
+import Toolbar from "./components/Toolbar";
+import type { Shape } from "./types";
 
 type Mode = "pan" | "draw";
 
@@ -43,13 +38,13 @@ function App() {
       setShapes((prev) => {
         const maxZ = Math.max(0, ...prev.map((s) => s.zIndex));
         return prev.map((shape) =>
-          shape.id === shapeId ? { ...shape, zIndex: maxZ + 1 } : shape
+          shape.id === shapeId ? { ...shape, zIndex: maxZ + 1 } : shape,
         );
       });
 
       lastCursorPos.current = { x: e.clientX, y: e.clientY };
     },
-    [mode]
+    [mode],
   );
 
   const getCanvasCoordinates = useCallback(
@@ -57,7 +52,7 @@ function App() {
       x: clientX - canvasOffset.x,
       y: clientY - canvasOffset.y,
     }),
-    [canvasOffset]
+    [canvasOffset],
   );
 
   const handleMouseDown = useCallback(
@@ -90,7 +85,7 @@ function App() {
         lastCursorPos.current = { x: e.clientX, y: e.clientY };
       }
     },
-    [mode, draggingShape, getCanvasCoordinates, shapes]
+    [mode, draggingShape, getCanvasCoordinates, shapes],
   );
 
   const updateDrawingShape = useCallback(
@@ -113,12 +108,12 @@ function App() {
           prev.map((shape) =>
             shape.id === drawingShapeId
               ? { ...shape, x, y, width, height }
-              : shape
-          )
+              : shape,
+          ),
         );
       });
     },
-    [drawingShapeId]
+    [drawingShapeId],
   );
 
   const handleMouseMove = useCallback(
@@ -143,7 +138,13 @@ function App() {
         lastCursorPos.current = { x: e.clientX, y: e.clientY };
       }
     },
-    [isDragging, draggingShape, drawingShapeId, getCanvasCoordinates, updateDrawingShape]
+    [
+      isDragging,
+      draggingShape,
+      drawingShapeId,
+      getCanvasCoordinates,
+      updateDrawingShape,
+    ],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -199,7 +200,7 @@ function App() {
         };
       }
     },
-    [isDragging]
+    [isDragging],
   );
 
   const handleTouchEnd = useCallback(() => {
@@ -268,12 +269,12 @@ function App() {
           prev.map((shape) =>
             shape.id === draggingShape
               ? {
-                ...shape,
-                x: shape.x + deltaX,
-                y: shape.y + deltaY,
-              }
-              : shape
-          )
+                  ...shape,
+                  x: shape.x + deltaX,
+                  y: shape.y + deltaY,
+                }
+              : shape,
+          ),
         );
 
         lastCursorPos.current = { x: clientX, y: clientY };
@@ -297,11 +298,11 @@ function App() {
     (newPosition: { x: number; y: number }) => {
       setCanvasOffset(newPosition);
     },
-    []
+    [],
   );
 
   const canvasBounds = useMemo(() => {
-    let bounds = {
+    const bounds = {
       minX: -window.innerWidth,
       maxX: window.innerWidth * 2,
       minY: -window.innerHeight,
@@ -345,13 +346,15 @@ function App() {
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)`,
             width: canvasBounds.width,
             height: canvasBounds.height,
+            border: "10px solid red",
           }}
         >
           {shapes.map((shape) => (
             <div
               key={shape.id}
-              className={`shape shape-${shape.type} ${draggingShape === shape.id ? "dragging" : ""
-                } ${drawingShapeId === shape.id ? "drawing-preview" : ""}`}
+              className={`shape shape-${shape.type} ${
+                draggingShape === shape.id ? "dragging" : ""
+              } ${drawingShapeId === shape.id ? "drawing-preview" : ""}`}
               style={{
                 left: shape.x,
                 top: shape.y,
@@ -379,7 +382,7 @@ function App() {
 }
 
 function App1() {
-  return <Canvas />
+  return <Canvas />;
 }
 
-export default App1;
+export default App;

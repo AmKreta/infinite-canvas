@@ -1,6 +1,6 @@
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
 
 // Alias workspace packages straight to their TS source instead of their
 // built `dist/`, so editing hooks/lib/canvas/utils/createZustandContext
@@ -10,16 +10,16 @@ export default defineConfig({
   resolve: {
     alias: {
       "@infinite-canvas/hooks": fileURLToPath(
-        new URL("../hooks/index.tsx", import.meta.url)
+        new URL("../hooks/index.tsx", import.meta.url),
       ),
       "@infinite-canvas/canvas": fileURLToPath(
-        new URL("../lib/canvas/index.tsx", import.meta.url)
+        new URL("../lib/canvas/index.tsx", import.meta.url),
       ),
       "@infinite-canvas/utils": fileURLToPath(
-        new URL("../utils/index.tsx", import.meta.url)
+        new URL("../utils/index.tsx", import.meta.url),
       ),
       "@infinite-canvas/createZustandContext": fileURLToPath(
-        new URL("../lib/createZustandContext/index.tsx", import.meta.url)
+        new URL("../lib/createZustandContext/index.tsx", import.meta.url),
       ),
     },
   },
