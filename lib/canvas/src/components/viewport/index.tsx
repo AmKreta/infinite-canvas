@@ -2,16 +2,13 @@ import { getRandomColor } from "@infinite-canvas/utils";
 import { useCanvasStore, useCanvasStoreApi } from "../CanvasContext";
 import { useCallback, useEffect } from "react";
 import { Mode, Shape } from "../../types";
-import "./index.css";
 import { getShapeMaxZIndex } from "../../utils/maxShapeZIndex";
+import "./index.css";
 
 export function Viewport({ children }: { children: React.ReactNode }) {
   const mode = useCanvasStore(state => state.mode);
   const shapes = useCanvasStore(state => state.shapes);
-  const draggingShape = useCanvasStore(state => state.draggingShape);
-  const drawingShapeId = useCanvasStore(state => state.drawingShapeId);
   const drawingUpdate = useCanvasStore(state => state.drawingUpdate);
-  const isDragging = useCanvasStore(state => state.isDragging);
   const setContainer = useCanvasStore(state => state.setContainer);
   const setCanvasOffset = useCanvasStore(state => state.setCanvasOffset);
   const setShapes = useCanvasStore(state => state.setShapes);
@@ -22,7 +19,6 @@ export function Viewport({ children }: { children: React.ReactNode }) {
   const setDraggingShape = useCanvasStore(state => state.setDraggingShape);
   const setDrawingUpdate = useCanvasStore(state => state.setDrawingUpdate);
   const setMode = useCanvasStore(state => state.setMode);
-
   const canvasStore = useCanvasStoreApi();  
 
   const getCanvasCoordinates = useCallback((clientX: number, clientY: number) => {
@@ -38,6 +34,8 @@ export function Viewport({ children }: { children: React.ReactNode }) {
       if (drawingUpdate) {
         cancelAnimationFrame(drawingUpdate);
       }
+
+      const drawingShapeId = canvasStore.getState().drawingShapeId;
 
       if(!drawingShapeId ){
         return;
@@ -55,7 +53,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
 
       setDrawingUpdate(_drawingUpdate);
     },
-    [drawingShapeId]
+    [shapes]
   );
 
   const handleMouseDown = useCallback(
@@ -77,25 +75,34 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         setShapes([ ...shapes, newShape ]);
         setDrawingShapeId(newShapeId);
         setDrawindStartCoords(canvasCoords);
-      } else if (draggingShape === null) {
+        return;
+      }
+      const draggingShape = canvasStore.getState().draggingShape;
+      if (draggingShape === null) {
         setIsDragging(true);
       }
       setLastCursorPos({ x: e.clientX, y: e.clientY });
     },
-    [mode, draggingShape, getCanvasCoordinates, shapes]
+    [mode, getCanvasCoordinates, shapes]
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
+      const draggingShape = canvasStore.getState().draggingShape;
       if (draggingShape !== null) {
         // Shape dragging is handled by the global document mousemove
         // listener below, so it keeps tracking the cursor even if it
         // leaves this element's bounds mid-drag.
         return;
-      } else if (drawingShapeId) {
+      }
+      const drawingShapeId = canvasStore.getState().drawingShapeId;
+      if (drawingShapeId) {
         const canvasCoords = getCanvasCoordinates(e.clientX, e.clientY);
         updateDrawingShape(canvasCoords);
-      } else if (isDragging) {
+        return;
+      }
+      const isDragging = canvasStore.getState().isDragging;
+      if (isDragging) {
         const lastCursorPos = canvasStore.getState().lastCursorPos;
         const canvasOffset = canvasStore.getState().canvasOffset;
         
@@ -110,10 +117,11 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         setLastCursorPos({ x: e.clientX, y: e.clientY });
       }
     },
-    [isDragging, draggingShape, drawingShapeId, getCanvasCoordinates, updateDrawingShape]
+    [getCanvasCoordinates, updateDrawingShape]
   );
 
   const handleMouseUp = useCallback(() => {
+    const drawingShapeId = canvasStore.getState().drawingShapeId;
     if (drawingShapeId) {
       if (drawingUpdate) {
         cancelAnimationFrame(drawingUpdate);
@@ -135,7 +143,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
 
     setIsDragging(false);
     setDraggingShape(null);
-  }, [drawingShapeId, shapes]);
+  }, [shapes]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 1) {
@@ -150,7 +158,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
       e.preventDefault();
-
+      const isDragging = canvasStore.getState().isDragging;
       if (e.touches.length === 1 && isDragging) {
         const lastCursorPos = canvasStore.getState().lastCursorPos;
         const canvasOffset = canvasStore.getState().canvasOffset;
@@ -169,15 +177,16 @@ export function Viewport({ children }: { children: React.ReactNode }) {
         });
       }
     },
-    [isDragging]
+    [setCanvasOffset, setLastCursorPos]
   );
 
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
-  }, []);
+  }, [setIsDragging]);
 
   useEffect(() => {
     const handleGlobalMouseUp = () => {
+      const drawingShapeId = canvasStore.getState().drawingShapeId;
       if (drawingShapeId) {
         if (drawingUpdate) {
           cancelAnimationFrame(drawingUpdate);
@@ -199,6 +208,8 @@ export function Viewport({ children }: { children: React.ReactNode }) {
     };
 
     const handleGlobalMouseMove = (e: MouseEvent) => {
+      const draggingShape = canvasStore.getState().draggingShape;
+      const drawingShapeId = canvasStore.getState().drawingShapeId;
       if (draggingShape !== null && !drawingShapeId) {
         const container = canvasStore.getState().container;
         if (!container) return;
@@ -247,7 +258,7 @@ export function Viewport({ children }: { children: React.ReactNode }) {
       document.removeEventListener("mouseup", handleGlobalMouseUp);
       document.removeEventListener("mousemove", handleGlobalMouseMove);
     };
-  }, [drawingShapeId, draggingShape, shapes]);
+  }, [shapes]);
 
   return <div
     className={`infinite-canvas ${mode === "draw" ? "draw-mode" : ""}`}
