@@ -9,6 +9,10 @@ export function Viewport({ children }: { children: React.ReactNode }) {
   const mode = useCanvasStore((state) => state.mode);
   const shapes = useCanvasStore((state) => state.shapes);
   const drawingUpdate = useCanvasStore((state) => state.drawingUpdate);
+  const setDragUpdate = useCanvasStore((state) => state.setDragUpdate);
+  const setPendingDragDelta = useCanvasStore(
+    (state) => state.setPendingDragDelta,
+  );
   const setContainer = useCanvasStore((state) => state.setContainer);
   const setCanvasOffset = useCanvasStore((state) => state.setCanvasOffset);
   const setShapes = useCanvasStore((state) => state.setShapes);
@@ -117,47 +121,69 @@ export function Viewport({ children }: { children: React.ReactNode }) {
       const lastCursorPos = canvasStore.getState().lastCursorPos;
       const deltaX = clientX - lastCursorPos.x;
       const deltaY = clientY - lastCursorPos.y;
-
-      const scrollMargin = 50;
-      const scrollSpeed = 5;
-
-      let canvasDeltaX = 0;
-      let canvasDeltaY = 0;
-
-      if (clientX < scrollMargin) {
-        canvasDeltaX = scrollSpeed;
-      } else if (clientX > window.innerWidth - scrollMargin) {
-        canvasDeltaX = -scrollSpeed;
-      }
-
-      if (clientY < scrollMargin) {
-        canvasDeltaY = scrollSpeed;
-      } else if (clientY > window.innerHeight - scrollMargin) {
-        canvasDeltaY = -scrollSpeed;
-      }
-
-      if (canvasDeltaX !== 0 || canvasDeltaY !== 0) {
-        const canvasOffset = canvasStore.getState().canvasOffset;
-        setCanvasOffset({
-          x: canvasOffset.x + canvasDeltaX,
-          y: canvasOffset.y + canvasDeltaY,
-        });
-      }
-      setShapes(
-        shapes.map((s) =>
-          s.id === draggingShape
-            ? { ...s, x: s.x + deltaX, y: s.y + deltaY }
-            : s,
-        ),
-      );
       setLastCursorPos({ x: clientX, y: clientY });
+
+      const pendingDelta = canvasStore.getState().pendingDragDelta;
+      setPendingDragDelta({
+        x: pendingDelta.x + deltaX,
+        y: pendingDelta.y + deltaY,
+      });
+
+      const pendingDragUpdate = canvasStore.getState().dragUpdate;
+      if (pendingDragUpdate) {
+        cancelAnimationFrame(pendingDragUpdate);
+      }
+
+      const _dragUpdate = requestAnimationFrame(() => {
+        const { x: accDeltaX, y: accDeltaY } =
+          canvasStore.getState().pendingDragDelta;
+        setPendingDragDelta({ x: 0, y: 0 });
+
+        const scrollMargin = 50;
+        const scrollSpeed = 5;
+
+        let canvasDeltaX = 0;
+        let canvasDeltaY = 0;
+
+        if (clientX < scrollMargin) {
+          canvasDeltaX = scrollSpeed;
+        } else if (clientX > window.innerWidth - scrollMargin) {
+          canvasDeltaX = -scrollSpeed;
+        }
+
+        if (clientY < scrollMargin) {
+          canvasDeltaY = scrollSpeed;
+        } else if (clientY > window.innerHeight - scrollMargin) {
+          canvasDeltaY = -scrollSpeed;
+        }
+
+        if (canvasDeltaX !== 0 || canvasDeltaY !== 0) {
+          const canvasOffset = canvasStore.getState().canvasOffset;
+          setCanvasOffset({
+            x: canvasOffset.x + canvasDeltaX,
+            y: canvasOffset.y + canvasDeltaY,
+          });
+        }
+
+        const currentShapes = canvasStore.getState().shapes;
+        setShapes(
+          currentShapes.map((s) =>
+            s.id === draggingShape
+              ? { ...s, x: s.x + accDeltaX, y: s.y + accDeltaY }
+              : s,
+          ),
+        );
+      });
+
+      setDragUpdate(_dragUpdate);
     },
     [
       canvasStore.getState,
       setCanvasOffset,
+      setDragUpdate,
       setLastCursorPos,
+      setPendingDragDelta,
       setShapes,
-      shapes,
     ],
   );
 
@@ -205,11 +231,12 @@ export function Viewport({ children }: { children: React.ReactNode }) {
   const handlePointerUp = useCallback(() => {
     const drawingShapeId = canvasStore.getState().drawingShapeId;
     if (drawingShapeId) {
+      const drawingUpdate = canvasStore.getState().drawingUpdate;
       if (drawingUpdate) {
         cancelAnimationFrame(drawingUpdate);
         setDrawingUpdate(null);
       }
-
+      const shapes = canvasStore.getState().shapes;
       const drawingShape = shapes.find((shape) => shape.id === drawingShapeId);
       if (
         !drawingShape ||
@@ -223,17 +250,24 @@ export function Viewport({ children }: { children: React.ReactNode }) {
       setMode(Mode.PAN);
     }
 
+    const pendingDragUpdate = canvasStore.getState().dragUpdate;
+    if (pendingDragUpdate) {
+      cancelAnimationFrame(pendingDragUpdate);
+      setDragUpdate(null);
+    }
+    setPendingDragDelta({ x: 0, y: 0 });
+
     setIsDragging(false);
     setDraggingShape(null);
   }, [
-    shapes,
     canvasStore.getState,
-    drawingUpdate,
     setDraggingShape,
+    setDragUpdate,
     setDrawingShapeId,
     setDrawingUpdate,
     setIsDragging,
     setMode,
+    setPendingDragDelta,
     setShapes,
   ]);
 

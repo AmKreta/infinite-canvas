@@ -11,8 +11,10 @@ interface CanvasStateType {
   drawingShapeId: string | null;
   container: HTMLDivElement | null;
   drawingUpdate: number | null;
+  dragUpdate: number | null;
   lastCursorPos: { x: number; y: number };
   drawingStartCoords: { x: number; y: number };
+  pendingDragDelta: { x: number; y: number };
   setCanvasOffset: (canvasOffset: { x: number; y: number }) => void;
   setIsDragging: (isDragging: boolean) => void;
   setShapes: (shapes: Shape[]) => void;
@@ -21,8 +23,10 @@ interface CanvasStateType {
   setDrawingShapeId: (drawingShapeId: string | null) => void;
   setContainer: (container: HTMLDivElement | null) => void;
   setDrawingUpdate: (drawingUpdate: number | null) => void;
+  setDragUpdate: (dragUpdate: number | null) => void;
   setLastCursorPos: (lastCursorPos: { x: number; y: number }) => void;
   setDrawingStartCoords: (drawingStartCoords: { x: number; y: number }) => void;
+  setPendingDragDelta: (pendingDragDelta: { x: number; y: number }) => void;
 }
 
 const canvasStoreCreator = () =>
@@ -45,16 +49,22 @@ const canvasStoreCreator = () =>
     // non-reactive state
     container: null,
     drawingUpdate: null,
+    dragUpdate: null,
     lastCursorPos: { x: 0, y: 0 },
     drawingStartCoords: { x: 0, y: 0 },
+    pendingDragDelta: { x: 0, y: 0 },
     setContainer: (container: HTMLDivElement | null) =>
       (get().container = container),
     setDrawingUpdate: (drawingUpdate: number | null) =>
       (get().drawingUpdate = drawingUpdate),
+    setDragUpdate: (dragUpdate: number | null) =>
+      (get().dragUpdate = dragUpdate),
     setLastCursorPos: (lastCursorPos: { x: number; y: number }) =>
       (get().lastCursorPos = lastCursorPos),
     setDrawingStartCoords: (drawingStartCoords: { x: number; y: number }) =>
       (get().drawingStartCoords = drawingStartCoords),
+    setPendingDragDelta: (pendingDragDelta: { x: number; y: number }) =>
+      (get().pendingDragDelta = pendingDragDelta),
   }));
 
 export const [CanvasProvider, useCanvasStore, useCanvasStoreApi] =
