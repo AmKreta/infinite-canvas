@@ -3,7 +3,6 @@ import { memo } from "react";
 import type { Shape as ShapeType } from "../types"
 
 type ShapeProps = ShapeType & {
-  onMouseDown: (e: React.MouseEvent) => unknown;
   isDragging?: boolean;
   isDrawingPreview?: boolean;
 };
@@ -17,7 +16,6 @@ const _Shape: React.FC<ShapeProps> = ({
   height,
   color,
   zIndex,
-  onMouseDown,
   isDragging,
   isDrawingPreview
 }) => {
@@ -35,7 +33,6 @@ const _Shape: React.FC<ShapeProps> = ({
         zIndex: zIndex,
       }}
       id={id}
-      onMouseDown={onMouseDown}
     />
   );
 };

@@ -29,8 +29,7 @@ function App() {
   const drawingUpdateRef = useRef<number | null>(null);
 
   const handleShapeMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      const shapeId = (e.target as HTMLDivElement).id;
+    (e: React.MouseEvent, shapeId: string) => {
       if (mode === "draw" || !shapeId) {
         return false;
       }
@@ -39,15 +38,6 @@ function App() {
       e.preventDefault();
 
       setDraggingShape(shapeId);
-
-      setShapes((prev) => {
-        const maxZ = Math.max(0, ...prev.map((s) => s.zIndex));
-        return prev.map((shape) =>
-          shape.id === shapeId ? { ...shape, zIndex: maxZ + 1 } : shape
-        );
-      });
-
-      lastCursorPos.current = { x: e.clientX, y: e.clientY };
 
       setShapes((prev) => {
         const maxZ = Math.max(0, ...prev.map((s) => s.zIndex));
@@ -96,7 +86,13 @@ function App() {
         drawingStartCoords.current = canvasCoords;
         lastCursorPos.current = { x: e.clientX, y: e.clientY };
       } else if (draggingShape === null) {
-        setIsDragging(true);
+        const shapeClicked = (e.target as HTMLElement).classList.contains("shape");
+        if (shapeClicked) {
+          const id = (e.target as HTMLElement).id;
+          handleShapeMouseDown(e, id);
+        } else {
+          setIsDragging(true);
+        }
         lastCursorPos.current = { x: e.clientX, y: e.clientY };
       }
     },
@@ -266,6 +262,7 @@ function App() {
       >
         <div
           className="canvas-content"
+          id="canvas-content"
           style={{
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)`,
             width: canvasBounds.width,
@@ -277,7 +274,6 @@ function App() {
               key={shape.id}
               isDragging={draggingShape === shape.id}
               isDrawingPreview={drawingShapeId === shape.id}
-              onMouseDown={handleShapeMouseDown}
               {...shape}
             />
           ))}
