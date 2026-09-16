@@ -79,18 +79,19 @@ const Minimap: React.FC<MinimapProps> = ({
     minimapSize.height / contentBounds.height
   );
 
-  const handleMinimapMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleMinimapPointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     setIsDraggingMinimap(true);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
     lastPosition.current = { x: e.clientX, y: e.clientY };
   }, []);
 
-  const handleMinimapMouseMove = useCallback(
-    (e: React.MouseEvent) => {
+  const handleMinimapPointerMove = useCallback(
+    (e: React.PointerEvent) => {
       if (!isDraggingMinimap) return;
 
-      const deltaX = e.clientX - lastPosition.current.x;
-      const deltaY = e.clientY - lastPosition.current.y;
+      const deltaX = lastPosition.current.x - e.clientX;
+      const deltaY = lastPosition.current.y - e.clientY;
 
       setMinimapPosition((prev) => ({
         x: prev.x + deltaX,
@@ -102,7 +103,7 @@ const Minimap: React.FC<MinimapProps> = ({
     [isDraggingMinimap]
   );
 
-  const handleMinimapMouseUp = useCallback(() => {
+  const handleMinimapPointerUp = useCallback(() => {
     setIsDraggingMinimap(false);
   }, []);
 
@@ -115,9 +116,9 @@ const Minimap: React.FC<MinimapProps> = ({
         right: minimapPosition.x,
         cursor: isDraggingMinimap ? "grabbing" : "grab",
       }}
-      onMouseDown={handleMinimapMouseDown}
-      onMouseMove={handleMinimapMouseMove}
-      onMouseUp={handleMinimapMouseUp}
+      onPointerDown={handleMinimapPointerDown}
+      onPointerMove={handleMinimapPointerMove}
+      onPointerUp={handleMinimapPointerUp}
     >
       <div
         ref={minimapRef}
