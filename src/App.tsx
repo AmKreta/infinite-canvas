@@ -2,13 +2,13 @@ import React, {
   useState,
   useRef,
   useCallback,
-  useEffect,
   useMemo,
 } from "react";
 import "./App.css";
 import Toolbar from "./components/Toolbar";
 import Minimap from "./components/Minimap";
-import { Shape } from "./types";
+import type { Shape as ShapeType } from "./types";
+import Shape from "./components/Shape";
 import { getRandomColor } from "./utils/colors";
 
 type Mode = "pan" | "draw";
@@ -20,7 +20,7 @@ function App() {
   });
   const [isDragging, setIsDragging] = useState(false);
   const lastCursorPos = useRef({ x: 0, y: 0 });
-  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [shapes, setShapes] = useState<ShapeType[]>([]);
   const [draggingShape, setDraggingShape] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("pan");
   const drawingStartCoords = useRef({ x: 0, y: 0 });
@@ -29,8 +29,9 @@ function App() {
   const drawingUpdateRef = useRef<number | null>(null);
 
   const handleShapeMouseDown = useCallback(
-    (e: React.MouseEvent, shapeId: string) => {
-      if (mode === "draw") {
+    (e: React.MouseEvent) => {
+      const shapeId = (e.target as HTMLDivElement).id;
+      if (mode === "draw" || !shapeId) {
         return false;
       }
 
@@ -68,14 +69,15 @@ function App() {
     [canvasOffset]
   );
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
       if (mode === "draw") {
         const canvasCoords = getCanvasCoordinates(e.clientX, e.clientY);
         const newShapeId = `drawing-${Date.now()}`;
         const newColor = getRandomColor();
 
-        const newShape: Shape = {
+        const newShape: ShapeType = {
           id: newShapeId,
           type: "rectangle",
           x: canvasCoords.x,
@@ -129,11 +131,11 @@ function App() {
     [drawingShapeId]
   );
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
       if (draggingShape !== null) {
-        const deltaX = (e.clientX - lastCursorPos.current.x) * 0.8;
-        const deltaY = (e.clientY - lastCursorPos.current.y) * 0.8;
+        const deltaX = (e.clientX - lastCursorPos.current.x);
+        const deltaY = (e.clientY - lastCursorPos.current.y);
 
         const scrollMargin = 50;
         const scrollSpeed = 5;
@@ -190,7 +192,7 @@ function App() {
     [isDragging, draggingShape, drawingShapeId, getCanvasCoordinates, updateDrawingShape]
   );
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     if (drawingShapeId) {
       if (drawingUpdateRef.current) {
         cancelAnimationFrame(drawingUpdateRef.current);
@@ -213,125 +215,6 @@ function App() {
     setIsDragging(false);
     setDraggingShape(null);
   }, [drawingShapeId, shapes]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      lastCursorPos.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      };
-    }
-  }, []);
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      e.preventDefault();
-
-      if (e.touches.length === 1 && isDragging) {
-        const deltaX = e.touches[0].clientX - lastCursorPos.current.x;
-        const deltaY = e.touches[0].clientY - lastCursorPos.current.y;
-
-        setCanvasOffset((prev) => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY,
-        }));
-
-        lastCursorPos.current = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
-        };
-      }
-    },
-    [isDragging]
-  );
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      if (drawingShapeId) {
-        if (drawingUpdateRef.current) {
-          cancelAnimationFrame(drawingUpdateRef.current);
-          drawingUpdateRef.current = null;
-        }
-
-        const drawingShape = shapes.find((s) => s.id === drawingShapeId);
-        if (
-          !drawingShape ||
-          drawingShape.width <= 5 ||
-          drawingShape.height <= 5
-        ) {
-          setShapes((prev) => prev.filter((s) => s.id !== drawingShapeId));
-        }
-        setMode("pan");
-      }
-      setIsDragging(false);
-      setDraggingShape(null);
-    };
-
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (draggingShape !== null && !drawingShapeId) {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const clientX = e.clientX;
-        const clientY = e.clientY;
-
-        const deltaX = (clientX - lastCursorPos.current.x) * 0.8;
-        const deltaY = (clientY - lastCursorPos.current.y) * 0.8;
-
-        const scrollMargin = 50;
-        const scrollSpeed = 5;
-
-        let canvasDeltaX = 0;
-        let canvasDeltaY = 0;
-
-        if (clientX < scrollMargin) {
-          canvasDeltaX = scrollSpeed;
-        } else if (clientX > window.innerWidth - scrollMargin) {
-          canvasDeltaX = -scrollSpeed;
-        }
-
-        if (clientY < scrollMargin) {
-          canvasDeltaY = scrollSpeed;
-        } else if (clientY > window.innerHeight - scrollMargin) {
-          canvasDeltaY = -scrollSpeed;
-        }
-
-        if (canvasDeltaX !== 0 || canvasDeltaY !== 0) {
-          setCanvasOffset((prev) => ({
-            x: prev.x + canvasDeltaX,
-            y: prev.y + canvasDeltaY,
-          }));
-        }
-
-        setShapes((prev) =>
-          prev.map((shape) =>
-            shape.id === draggingShape
-              ? {
-                ...shape,
-                x: shape.x + deltaX,
-                y: shape.y + deltaY,
-              }
-              : shape
-          )
-        );
-
-        lastCursorPos.current = { x: clientX, y: clientY };
-      }
-    };
-
-    document.addEventListener("mouseup", handleGlobalMouseUp);
-    document.addEventListener("mousemove", handleGlobalMouseMove);
-
-    return () => {
-      document.removeEventListener("mouseup", handleGlobalMouseUp);
-      document.removeEventListener("mousemove", handleGlobalMouseMove);
-    };
-  }, [drawingShapeId, draggingShape, shapes]);
 
   const handleShapeSelect = useCallback(() => {
     setMode("draw");
@@ -358,7 +241,7 @@ function App() {
       bounds.minY = Math.min(bounds.minY, shape.y);
       bounds.maxY = Math.max(bounds.maxY, shape.y + shape.height);
     });
-    console.log(bounds)
+
     return {
       width: bounds.maxX - bounds.minX,
       height: bounds.maxY - bounds.minY,
@@ -377,12 +260,9 @@ function App() {
       <div
         className={`infinite-canvas ${mode === "draw" ? "draw-mode" : ""}`}
         ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
       >
         <div
           className="canvas-content"
@@ -393,21 +273,12 @@ function App() {
           }}
         >
           {shapes.map((shape) => (
-            <div
+            <Shape
               key={shape.id}
-              className={`shape shape-${shape.type} ${draggingShape === shape.id ? "dragging" : ""
-                } ${drawingShapeId === shape.id ? "drawing-preview" : ""}`}
-              style={{
-                left: shape.x,
-                top: shape.y,
-                width: shape.width,
-                height: shape.height,
-                borderRadius: "8px",
-                backgroundColor: shape.color,
-                borderColor: shape.color,
-                zIndex: shape.zIndex,
-              }}
-              onMouseDown={(e) => handleShapeMouseDown(e, shape.id)}
+              isDragging={draggingShape === shape.id}
+              isDrawingPreview={drawingShapeId === shape.id}
+              onMouseDown={handleShapeMouseDown}
+              {...shape}
             />
           ))}
         </div>
