@@ -33,7 +33,9 @@ const _Shape: React.FC<ShapeProps> = ({
         zIndex: zIndex,
       }}
       id={id}
-    />
+    >
+      {JSON.stringify({x, y, id}, null, 2)}
+    </div>
   );
 };
 

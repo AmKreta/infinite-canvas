@@ -28,13 +28,66 @@ function App() {
   const [drawingShapeId, setDrawingShapeId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const maxZIndex = useRef(0);
+  const cornerElements = useRef<{
+    top: ShapeType | null;
+    bottom: ShapeType | null;
+    left: ShapeType | null;
+    right: ShapeType | null;
+  }>({
+    top: null,
+    bottom: null,
+    left: null,
+    right: null,
+  });
 
-  const patchShapeAtIndex = useCallback((index: number, patch: Partial<ShapeType> | ((shape: ShapeType) => ShapeType)) => {
-    setShapes((prev) => {
-      const newShapes = [...prev];
-      newShapes[index] = typeof patch === "function" ? patch(newShapes[index]) : { ...newShapes[index], ...patch };
-      return newShapes;
-    });
+  const updateCornerElementOnAdd = useCallback((shape: ShapeType) => {
+    const corners = cornerElements.current;
+  
+    if (corners.top === null) {
+      corners.top = corners.bottom = corners.left = corners.right = shape;
+      return;
+    }
+  
+    if (shape.x < corners.left!.x) corners.left = shape;
+    if (shape.x > corners.right!.x) corners.right = shape;
+    if (shape.y < corners.top!.y) corners.top = shape;
+    if (shape.y > corners.bottom!.y) corners.bottom = shape;
+  }, []);
+
+  const updateCornerElementOnDrag = useCallback((shapes: readonly ShapeType[], draggingShapeIndex: number) => {
+    const shape = shapes[draggingShapeIndex];
+    const corners = cornerElements.current;
+  
+    const wasCorner =
+      shape === corners.top ||
+      shape === corners.bottom ||
+      shape === corners.left ||
+      shape === corners.right;
+  
+    if (!wasCorner) {
+      // Shape wasn't an extreme before, so it can only newly become one
+      // in the direction it moved — cheap comparison against current corners.
+      if (shape.x < corners.left!.x) corners.left = shape;
+      if (shape.x > corners.right!.x) corners.right = shape;
+      if (shape.y < corners.top!.y) corners.top = shape;
+      if (shape.y > corners.bottom!.y) corners.bottom = shape;
+      return;
+    }
+  
+    // Shape was a corner and moved — it may no longer be extreme in that
+    // direction, so recompute from scratch.
+    let left = shapes[0], right = shapes[0], top = shapes[0], bottom = shapes[0];
+    for (let i = 1; i < shapes.length; i++) {
+      const s = shapes[i];
+      if (s.x < left.x) left = s;
+      if (s.x > right.x) right = s;
+      if (s.y < top.y) top = s;
+      if (s.y > bottom.y) bottom = s;
+    }
+    corners.left = left;
+    corners.right = right;
+    corners.top = top;
+    corners.bottom = bottom;
   }, []);
 
   const handleShapeMouseDown = useCallback(
@@ -47,12 +100,16 @@ function App() {
       e.preventDefault();
 
       const draggingShapeIndex = shapes.findIndex((s) => s.id === shapeId);
-      if(draggingShapeIndex === -1) return;
+      if (draggingShapeIndex === -1) return;
       setDraggingShapeIndex(draggingShapeIndex);
       maxZIndex.current = (shapes[draggingShapeIndex].zIndex > maxZIndex.current)
         ? shapes[draggingShapeIndex].zIndex
         : maxZIndex.current + 1;
-      patchShapeAtIndex(draggingShapeIndex, { zIndex: maxZIndex.current });
+      setShapes((prev) => {
+        const newShapes = [...prev];
+        newShapes[draggingShapeIndex] = { ...newShapes[draggingShapeIndex], zIndex: maxZIndex.current };
+        return newShapes;
+      });
       lastCursorPos.current = { x: e.clientX, y: e.clientY };
     },
     [mode, shapes]
@@ -74,16 +131,19 @@ function App() {
     const x = Math.min(canvasCoords.x, drawingStartCoords.current.x);
     const y = Math.min(canvasCoords.y, drawingStartCoords.current.y);
     setShapes((prev) =>
-      prev.map((shape) =>
-        shape.id === drawingShapeId
-          ? { ...shape, x, y, width, height }
-          : shape
-      )
+      prev.map((shape) => {
+        if(shape.id === drawingShapeId) {
+          const newShape = { ...shape, x, y, width, height };
+          updateCornerElementOnAdd(newShape);
+          return newShape;
+        }
+        return shape;
+      })
     );
   }, [drawingShapeId]));
 
   const [updateDraggingShape, cancelUpdateDraggingShape] = useRAFThrottledFn(useCallback((e: React.PointerEvent) => {
-    if(draggingShapeIndex === null) return;
+    if (draggingShapeIndex === null) return;
     const scrollMargin = 50;
     const scrollSpeed = 5;
     let canvasDeltaX = 0;
@@ -110,9 +170,14 @@ function App() {
 
     const deltaX = (e.clientX - lastCursorPos.current.x);
     const deltaY = (e.clientY - lastCursorPos.current.y);
-    patchShapeAtIndex(draggingShapeIndex, (shape) => ({ ...shape, x: shape.x + deltaX, y: shape.y + deltaY }));
+    setShapes((prev) => {
+      const newShapes = [...prev];
+      newShapes[draggingShapeIndex] = { ...newShapes[draggingShapeIndex], x: newShapes[draggingShapeIndex].x + deltaX, y: newShapes[draggingShapeIndex].y + deltaY };
+      updateCornerElementOnDrag(newShapes, draggingShapeIndex);
+      return newShapes;
+    });
     lastCursorPos.current = { x: e.clientX, y: e.clientY };
-  }, [draggingShapeIndex]));
+  }, [draggingShapeIndex, shapes]));
 
   const [updateCanvasOffset, cancelUpdateCanvasOffset] = useRAFThrottledFn(useCallback((e: React.PointerEvent) => {
     if (!isDragging) return;
@@ -193,7 +258,7 @@ function App() {
 
     cancelUpdateDraggingShape();
     setDraggingShapeIndex(null);
-    
+
     cancelUpdateCanvasOffset();
     setIsDragging(false);
 
@@ -212,19 +277,11 @@ function App() {
 
   const canvasBounds = useMemo(() => {
     let bounds = {
-      minX: -window.innerWidth,
-      maxX: window.innerWidth * 2,
-      minY: -window.innerHeight,
-      maxY: window.innerHeight * 2,
+      minX: Math.min(cornerElements.current.left?.x || -window.innerWidth, -window.innerWidth),
+      maxX: Math.max(cornerElements.current.right?.x || window.innerWidth, window.innerWidth),
+      minY: Math.min(cornerElements.current.top?.y || -window.innerHeight, -window.innerHeight),
+      maxY: Math.max(cornerElements.current.bottom?.y || window.innerHeight, window.innerHeight),
     };
-
-    shapes.forEach((shape) => {
-      bounds.minX = Math.min(bounds.minX, shape.x);
-      bounds.maxX = Math.max(bounds.maxX, shape.x + shape.width);
-      bounds.minY = Math.min(bounds.minY, shape.y);
-      bounds.maxY = Math.max(bounds.maxY, shape.y + shape.height);
-    });
-
     return {
       width: bounds.maxX - bounds.minX,
       height: bounds.maxY - bounds.minY,
