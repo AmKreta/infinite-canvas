@@ -27,6 +27,7 @@ function App() {
   const drawingStartCoords = useRef({ x: 0, y: 0 });
   const [drawingShapeId, setDrawingShapeId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const maxZIndex = useRef(0);
 
   const patchShapeAtIndex = useCallback((index: number, patch: Partial<ShapeType> | ((shape: ShapeType) => ShapeType)) => {
     setShapes((prev) => {
@@ -48,10 +49,13 @@ function App() {
       const draggingShapeIndex = shapes.findIndex((s) => s.id === shapeId);
       if(draggingShapeIndex === -1) return;
       setDraggingShapeIndex(draggingShapeIndex);
-      patchShapeAtIndex(draggingShapeIndex, { zIndex: Math.max(0, ...shapes.map((s) => s.zIndex)) + 1 });
+      maxZIndex.current = (shapes[draggingShapeIndex].zIndex > maxZIndex.current)
+        ? shapes[draggingShapeIndex].zIndex
+        : maxZIndex.current + 1;
+      patchShapeAtIndex(draggingShapeIndex, { zIndex: maxZIndex.current });
       lastCursorPos.current = { x: e.clientX, y: e.clientY };
     },
-    [mode]
+    [mode, shapes]
   );
 
   const getCanvasCoordinates = useCallback(
@@ -137,10 +141,7 @@ function App() {
           width: 0,
           height: 0,
           color: newColor,
-          zIndex:
-            shapes.length > 0
-              ? Math.max(...shapes.map((s) => s.zIndex)) + 1
-              : 1,
+          zIndex: maxZIndex.current + 1,
         };
 
         setShapes((prev) => [...prev, newShape]);
@@ -177,7 +178,7 @@ function App() {
   const handlePointerUp = useCallback(() => {
     if (drawingShapeId) {
       cancelUpdateDrawingShape();
-      const drawingShape = shapes.find((s) => s.id === drawingShapeId);
+      const drawingShape = shapes[shapes.length - 1];
       if (
         !drawingShape ||
         drawingShape.width <= 5 ||
@@ -192,9 +193,10 @@ function App() {
 
     cancelUpdateDraggingShape();
     setDraggingShapeIndex(null);
-
+    
     cancelUpdateCanvasOffset();
     setIsDragging(false);
+
   }, [drawingShapeId, shapes]);
 
   const handleShapeSelect = useCallback(() => {
