@@ -22,11 +22,19 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const lastCursorPos = useRef({ x: 0, y: 0 });
   const [shapes, setShapes] = useState<ShapeType[]>([]);
-  const [draggingShape, setDraggingShape] = useState<string | null>(null);
+  const [draggingShapeIndex, setDraggingShapeIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<Mode>("pan");
   const drawingStartCoords = useRef({ x: 0, y: 0 });
   const [drawingShapeId, setDrawingShapeId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const patchShapeAtIndex = useCallback((index: number, patch: Partial<ShapeType> | ((shape: ShapeType) => ShapeType)) => {
+    setShapes((prev) => {
+      const newShapes = [...prev];
+      newShapes[index] = typeof patch === "function" ? patch(newShapes[index]) : { ...newShapes[index], ...patch };
+      return newShapes;
+    });
+  }, []);
 
   const handleShapeMouseDown = useCallback(
     (e: React.MouseEvent, shapeId: string) => {
@@ -37,15 +45,10 @@ function App() {
       e.stopPropagation();
       e.preventDefault();
 
-      setDraggingShape(shapeId);
-
-      setShapes((prev) => {
-        const maxZ = Math.max(0, ...prev.map((s) => s.zIndex));
-        return prev.map((shape) =>
-          shape.id === shapeId ? { ...shape, zIndex: maxZ + 1 } : shape
-        );
-      });
-
+      const draggingShapeIndex = shapes.findIndex((s) => s.id === shapeId);
+      if(draggingShapeIndex === -1) return;
+      setDraggingShapeIndex(draggingShapeIndex);
+      patchShapeAtIndex(draggingShapeIndex, { zIndex: Math.max(0, ...shapes.map((s) => s.zIndex)) + 1 });
       lastCursorPos.current = { x: e.clientX, y: e.clientY };
     },
     [mode]
@@ -76,6 +79,7 @@ function App() {
   }, [drawingShapeId]));
 
   const [updateDraggingShape, cancelUpdateDraggingShape] = useRAFThrottledFn(useCallback((e: React.PointerEvent) => {
+    if(draggingShapeIndex === null) return;
     const scrollMargin = 50;
     const scrollSpeed = 5;
     let canvasDeltaX = 0;
@@ -102,20 +106,9 @@ function App() {
 
     const deltaX = (e.clientX - lastCursorPos.current.x);
     const deltaY = (e.clientY - lastCursorPos.current.y);
-
-    setShapes((prev) =>
-      prev.map((shape) =>
-        shape.id === draggingShape
-          ? {
-            ...shape,
-            x: shape.x + deltaX,
-            y: shape.y + deltaY,
-          }
-          : shape
-      )
-    );
+    patchShapeAtIndex(draggingShapeIndex, (shape) => ({ ...shape, x: shape.x + deltaX, y: shape.y + deltaY }));
     lastCursorPos.current = { x: e.clientX, y: e.clientY };
-  }, [draggingShape]));
+  }, [draggingShapeIndex]));
 
   const [updateCanvasOffset, cancelUpdateCanvasOffset] = useRAFThrottledFn(useCallback((e: React.PointerEvent) => {
     if (!isDragging) return;
@@ -154,7 +147,7 @@ function App() {
         setDrawingShapeId(newShapeId);
         drawingStartCoords.current = canvasCoords;
         lastCursorPos.current = { x: e.clientX, y: e.clientY };
-      } else if (draggingShape === null) {
+      } else if (draggingShapeIndex === null) {
         const shapeClicked = (e.target as HTMLElement).classList.contains("shape");
         if (shapeClicked) {
           const id = (e.target as HTMLElement).id;
@@ -165,20 +158,20 @@ function App() {
         lastCursorPos.current = { x: e.clientX, y: e.clientY };
       }
     },
-    [mode, draggingShape, getCanvasCoordinates, shapes]
+    [mode, draggingShapeIndex, getCanvasCoordinates, shapes]
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (drawingShapeId) {
         updateDrawingShape(e);
-      } else if (draggingShape !== null) {
+      } else if (draggingShapeIndex !== null) {
         updateDraggingShape(e);
       } else if (isDragging) {
         updateCanvasOffset(e);
       }
     },
-    [isDragging, draggingShape, drawingShapeId, getCanvasCoordinates, updateDrawingShape]
+    [isDragging, draggingShapeIndex, drawingShapeId, getCanvasCoordinates, updateDrawingShape]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -198,7 +191,7 @@ function App() {
     }
 
     cancelUpdateDraggingShape();
-    setDraggingShape(null);
+    setDraggingShapeIndex(null);
 
     cancelUpdateCanvasOffset();
     setIsDragging(false);
@@ -261,10 +254,10 @@ function App() {
             height: canvasBounds.height,
           }}
         >
-          {shapes.map((shape) => (
+          {shapes.map((shape, index) => (
             <Shape
               key={shape.id}
-              isDragging={draggingShape === shape.id}
+              isDragging={draggingShapeIndex === index}
               isDrawingPreview={drawingShapeId === shape.id}
               {...shape}
             />
