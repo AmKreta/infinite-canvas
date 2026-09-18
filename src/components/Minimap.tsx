@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, RefObject, useMemo } from 'react';
 import { CornerShape, Shape } from '../types';
+import withRenderThrottle from '../HOC/WithRenderThrottle';
 
 interface MinimapProps {
   shapes: Shape[];
@@ -147,4 +148,4 @@ const Minimap: React.FC<MinimapProps> = ({
   );
 };
 
-export default Minimap;
+export default withRenderThrottle<MinimapProps>(Minimap, 150);
