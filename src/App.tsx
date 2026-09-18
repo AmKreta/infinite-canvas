@@ -117,7 +117,7 @@ function App() {
       return newShapes;
     });
     lastCursorPos.current = { x: e.clientX, y: e.clientY };
-  }, [draggingShapeIndex, shapes]));
+  }, [draggingShapeIndex]));
 
   const [updateCanvasOffset, cancelUpdateCanvasOffset] = useRAFThrottledFn(useCallback((e: React.PointerEvent) => {
     if (!isDragging) return;
