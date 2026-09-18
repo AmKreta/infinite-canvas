@@ -214,25 +214,15 @@ body, html {
 }
 
 .minimap {
-  position: relative;
+  display: block;
   background-color: var(--bg-secondary);
   cursor: pointer;
   user-select: none;
 }
 
 .minimap-shape {
-  position: absolute;
-  background-color: rgba(66, 165, 245, 0.6);
-  border: 1px solid #42A5F5;
+  stroke-width: 1;
   pointer-events: none;
-}
-
-.minimap-shape-rectangle {
-  border-radius: 2px;
-}
-
-.minimap-shape-circle {
-  border-radius: 50%;
 }
 
 /* Shape Selection */

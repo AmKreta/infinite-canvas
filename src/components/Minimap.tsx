@@ -19,7 +19,6 @@ const Minimap: React.FC<MinimapProps> = ({
   const [isDraggingMinimap, setIsDraggingMinimap] = useState(false);
   const lastPosition = useRef({ x: 0, y: 0 });
   const [minimapPosition, setMinimapPosition] = useState({ x: 20, y: 20 });
-  const minimapRef = useRef<HTMLDivElement>(null);
 
   const minimapSize = useMemo(()=>({
     width: viewportSize.width * 0.15,
@@ -75,6 +74,14 @@ const Minimap: React.FC<MinimapProps> = ({
     minimapSize.height / contentBounds.height
   );
 
+
+  const stackedShapes = useMemo(
+    () => [...shapes].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0)),
+    [shapes]
+  );
+
+  const cornerRadius = 2 / minimapScale;
+
   const handleMinimapPointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     setIsDraggingMinimap(true);
@@ -116,34 +123,28 @@ const Minimap: React.FC<MinimapProps> = ({
       onPointerMove={handleMinimapPointerMove}
       onPointerUp={handleMinimapPointerUp}
     >
-      <div
-        ref={minimapRef}
+      <svg
         className="minimap"
-        style={{
-          width: minimapSize.width,
-          height: minimapSize.height,
-        }}
+        width={minimapSize.width}
+        height={minimapSize.height}
+        viewBox={`${contentBounds.minX} ${contentBounds.minY} ${contentBounds.width} ${contentBounds.height}`}
+        preserveAspectRatio="xMinYMin meet"
       >
-        {[...shapes]
-          .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-          .map((shape) => (
-            <div
-              key={shape.id}
-              className={`minimap-shape minimap-shape-${shape.type}`}
-              style={{
-                position: "absolute",
-                left: (shape.x - contentBounds.minX) * minimapScale,
-                top: (shape.y - contentBounds.minY) * minimapScale,
-                width: shape.width * minimapScale,
-                height: shape.height * minimapScale,
-                borderRadius: "2px",
-                backgroundColor: shape.color,
-                borderColor: shape.color,
-                zIndex: shape.zIndex,
-              }}
-            />
-          ))}
-      </div>
+        {stackedShapes.map((shape) => (
+          <rect
+            key={shape.id}
+            className="minimap-shape"
+            x={shape.x}
+            y={shape.y}
+            width={shape.width}
+            height={shape.height}
+            rx={cornerRadius}
+            fill={shape.color}
+            stroke={shape.color}
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </svg>
     </div>
   );
 };
