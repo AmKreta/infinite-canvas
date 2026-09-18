@@ -16,6 +16,9 @@ import { SpatialHash } from "./utils/spatialHash";
 
 type Mode = "pan" | "draw";
 
+
+const DRAG_STATE_COMMIT_FRAMES = 10;
+
 function App() {
   const [canvasOffset, setCanvasOffset] = useState({
     x: -window.innerWidth,
@@ -31,6 +34,9 @@ function App() {
   const maxZIndex = useRef(0);
   const [cornerElements, updateCornerElementOnAdd, updateCornerElementOnDrag] = useCornerShapes();
   const spatialHash = useRef(new SpatialHash<ShapeType>(500, 2));
+  const liveDragShape = useRef<ShapeType | null>(null);
+  const liveDragShapeNode = useRef<HTMLDivElement | null>(null);
+  const dragCommitFrameCount = useRef(0);
 
   const handleShapeMouseDown = useCallback(
     (e: React.MouseEvent, shapeId: string) => {
@@ -40,7 +46,7 @@ function App() {
 
       e.stopPropagation();
       e.preventDefault();
-
+      liveDragShapeNode.current = e.target as HTMLDivElement;
       const draggingShapeIndex = shapes.findIndex((s) => s.id === shapeId);
       if (draggingShapeIndex === -1) return;
       setDraggingShapeIndex(draggingShapeIndex);
@@ -52,6 +58,8 @@ function App() {
         newShapes[draggingShapeIndex] = { ...newShapes[draggingShapeIndex], zIndex: maxZIndex.current };
         return newShapes;
       });
+      liveDragShape.current = { ...shapes[draggingShapeIndex], zIndex: maxZIndex.current };
+      dragCommitFrameCount.current = 0;
       lastCursorPos.current = { x: e.clientX, y: e.clientY };
     },
     [mode, shapes]
@@ -86,7 +94,7 @@ function App() {
   }, [drawingShapeId]));
 
   const [updateDraggingShape, cancelUpdateDraggingShape] = useRAFThrottledFn(useCallback((e: React.PointerEvent) => {
-    if (draggingShapeIndex === null) return;
+    if (draggingShapeIndex === null || !liveDragShape.current) return;
     const scrollMargin = 50;
     const scrollSpeed = 5;
     let canvasDeltaX = 0;
@@ -113,14 +121,34 @@ function App() {
 
     const deltaX = (e.clientX - lastCursorPos.current.x);
     const deltaY = (e.clientY - lastCursorPos.current.y);
-    setShapes((prev) => {
-      const newShapes = [...prev];
-      const newShape = { ...newShapes[draggingShapeIndex], x: newShapes[draggingShapeIndex].x + deltaX, y: newShapes[draggingShapeIndex].y + deltaY };
-      spatialHash.current.update(newShape.id, newShape);
-      newShapes[draggingShapeIndex] = newShape;
-      updateCornerElementOnDrag(newShapes, draggingShapeIndex);
-      return newShapes;
-    });
+
+    // Hot path: mutate the live ref, write the transform straight to the DOM,
+    // and keep the spatial hash current — all cheap, all synchronous, none of
+    // it goes through React. This is what avoids a full re-render every frame.
+    const draggedShape = liveDragShape.current;
+    draggedShape.x += deltaX;
+    draggedShape.y += deltaY;
+  
+    if (liveDragShapeNode.current) {
+      liveDragShapeNode.current.style.transform = `translate(${draggedShape.x}px, ${draggedShape.y}px) scale(1.05)`;
+    }
+    spatialHash.current.update(draggedShape.id, draggedShape);
+
+    // Periodically fold the live position back into React state so anything
+    // driven by `shapes` (the minimap, corner-bounds tracking) stays roughly
+    // live during the drag instead of only updating once on release.
+    dragCommitFrameCount.current += 1;
+    if (dragCommitFrameCount.current >= DRAG_STATE_COMMIT_FRAMES) {
+      dragCommitFrameCount.current = 0;
+      const committedShape = { ...draggedShape };
+      setShapes((prev) => {
+        const newShapes = [...prev];
+        newShapes[draggingShapeIndex] = committedShape;
+        updateCornerElementOnDrag(newShapes, draggingShapeIndex);
+        return newShapes;
+      });
+    }
+
     lastCursorPos.current = { x: e.clientX, y: e.clientY };
   }, [draggingShapeIndex]));
 
@@ -204,12 +232,23 @@ function App() {
     }
 
     cancelUpdateDraggingShape();
+    if (draggingShapeIndex !== null && liveDragShape.current) {
+      const finalShape = liveDragShape.current;
+      setShapes((prev) => {
+        const newShapes = [...prev];
+        newShapes[draggingShapeIndex] = finalShape;
+        updateCornerElementOnDrag(newShapes, draggingShapeIndex);
+        return newShapes;
+      });
+      liveDragShape.current = null;
+      liveDragShapeNode.current = null;
+    }
     setDraggingShapeIndex(null);
 
     cancelUpdateCanvasOffset();
     setIsDragging(false);
 
-  }, [drawingShapeId, shapes]);
+  }, [drawingShapeId, shapes, draggingShapeIndex]);
 
   const handleShapeSelect = useCallback(() => {
     setMode("draw");

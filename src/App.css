@@ -165,7 +165,7 @@ body, html {
   position: absolute;
   background-color: rgba(66, 165, 245, 0.3);
   border: 2px solid #42A5F5;
-  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 /* Only show move cursor in pan mode */
@@ -199,7 +199,7 @@ body, html {
   border-width: 3px;
   border-color: #000 !important;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-  transform: scale(1.05);
+  will-change: transform;
 }
 
 /* Minimap Styles */
