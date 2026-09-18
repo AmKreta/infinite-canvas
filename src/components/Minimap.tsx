@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, RefObject } from 'react';
+import React, { useState, useRef, useCallback, RefObject, useMemo } from 'react';
 import { CornerShape, Shape } from '../types';
 
 interface MinimapProps {
@@ -20,12 +20,12 @@ const Minimap: React.FC<MinimapProps> = ({
   const [minimapPosition, setMinimapPosition] = useState({ x: 20, y: 20 });
   const minimapRef = useRef<HTMLDivElement>(null);
 
-  const minimapSize = {
+  const minimapSize = useMemo(()=>({
     width: viewportSize.width * 0.15,
     height: viewportSize.height * 0.15,
-  };
+  }), [viewportSize]);
 
-  const getContentBounds = () => {
+  const getContentBounds = useCallback((shapes: Shape[], viewportSize: { width: number; height: number }, canvasPosition: { x: number; y: number }) => {
     if (shapes.length === 0) {
       return {
         minX: -viewportSize.width,
@@ -66,9 +66,9 @@ const Minimap: React.FC<MinimapProps> = ({
       width: maxX - minX,
       height: maxY - minY,
     };
-  };
+  }, []);
 
-  const contentBounds = getContentBounds();
+  const contentBounds = useMemo(()=>getContentBounds(shapes, viewportSize, canvasPosition), [shapes, viewportSize, canvasPosition]);
   const minimapScale = Math.min(
     minimapSize.width / contentBounds.width,
     minimapSize.height / contentBounds.height
