@@ -1,6 +1,10 @@
 import React, { useState, useRef, useCallback, RefObject, useMemo } from 'react';
 import { CornerShape, Shape } from '../types';
 import withRenderThrottle from '../HOC/WithRenderThrottle';
+import { useRAFThrottledFn } from '../hooks/useRAFThrottledFn';
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), Math.max(min, max));
 
 interface MinimapProps {
   shapes: Shape[];
@@ -19,6 +23,7 @@ const Minimap: React.FC<MinimapProps> = ({
   const [isDraggingMinimap, setIsDraggingMinimap] = useState(false);
   const lastPosition = useRef({ x: 0, y: 0 });
   const [minimapPosition, setMinimapPosition] = useState({ x: 20, y: 20 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const minimapSize = useMemo(()=>({
     width: viewportSize.width * 0.15,
@@ -89,29 +94,32 @@ const Minimap: React.FC<MinimapProps> = ({
     lastPosition.current = { x: e.clientX, y: e.clientY };
   }, []);
 
-  const handleMinimapPointerMove = useCallback(
+  const [handleMinimapPointerMove, cancelMinimapPointerMove] = useRAFThrottledFn(useCallback(
     (e: React.PointerEvent) => {
       if (!isDraggingMinimap) return;
-
       const deltaX = lastPosition.current.x - e.clientX;
       const deltaY = lastPosition.current.y - e.clientY;
+      const margin = 20;
+      const boxWidth = containerRef.current?.offsetWidth ?? 0;
+      const boxHeight = containerRef.current?.offsetHeight ?? 0;
 
       setMinimapPosition((prev) => ({
-        x: prev.x + deltaX,
-        y: prev.y + deltaY,
+        x: clamp(prev.x + deltaX, margin, window.innerWidth - boxWidth - margin),
+        y: clamp(prev.y + deltaY, margin, window.innerHeight - boxHeight - margin),
       }));
-
       lastPosition.current = { x: e.clientX, y: e.clientY };
     },
     [isDraggingMinimap]
-  );
+  ));
 
   const handleMinimapPointerUp = useCallback(() => {
+    cancelMinimapPointerMove();
     setIsDraggingMinimap(false);
-  }, []);
+  }, [cancelMinimapPointerMove]);
 
   return (
     <div
+      ref={containerRef}
       className="minimap-container"
       style={{
         position: "fixed",
