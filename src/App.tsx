@@ -268,6 +268,7 @@ function App() {
         canvasPosition={canvasOffset}
         onPositionChange={handleMinimapPositionChange}
         viewportSize={{ width: window.innerWidth, height: window.innerHeight }}
+        cornerShapes={cornerElements}
       />
     </>
   );

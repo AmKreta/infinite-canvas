@@ -1,17 +1,19 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Shape } from '../types';
+import React, { useState, useRef, useCallback, RefObject } from 'react';
+import { CornerShape, Shape } from '../types';
 
 interface MinimapProps {
   shapes: Shape[];
   canvasPosition: { x: number; y: number };
   onPositionChange: (position: { x: number; y: number }) => void;
   viewportSize: { width: number; height: number };
+  cornerShapes: RefObject<CornerShape>;
 }
 
 const Minimap: React.FC<MinimapProps> = ({
   shapes,
   canvasPosition,
   viewportSize,
+  cornerShapes,
 }) => {
   const [isDraggingMinimap, setIsDraggingMinimap] = useState(false);
   const lastPosition = useRef({ x: 0, y: 0 });
@@ -35,17 +37,10 @@ const Minimap: React.FC<MinimapProps> = ({
       };
     }
 
-    let minX = Infinity,
-      maxX = -Infinity;
-    let minY = Infinity,
-      maxY = -Infinity;
-
-    shapes.forEach((shape) => {
-      minX = Math.min(minX, shape.x);
-      maxX = Math.max(maxX, shape.x + shape.width);
-      minY = Math.min(minY, shape.y);
-      maxY = Math.max(maxY, shape.y + shape.height);
-    });
+    let minX = cornerShapes.current.left?.x ?? Infinity;
+    let maxX = cornerShapes.current.right?.x ?? -Infinity;
+    let minY = cornerShapes.current.top?.y ?? Infinity;
+    let maxY = cornerShapes.current.bottom?.y ?? -Infinity;
 
     const padding = 200;
     minX -= padding;

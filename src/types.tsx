@@ -8,3 +8,10 @@ export interface Shape {
   color: string;
   zIndex: number;
 }
+
+export type CornerShape = {
+  top: Shape | null;
+  bottom: Shape | null;
+  left: Shape | null;
+  right: Shape | null;
+}
