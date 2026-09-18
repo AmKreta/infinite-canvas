@@ -12,6 +12,7 @@ import Shape from "./components/Shape";
 import { getRandomColor } from "./utils/colors";
 import { useRAFThrottledFn } from "./hooks/useRAFThrottledFn";
 import { useCornerShapes } from "./hooks/useCornerShapes";
+import { SpatialHash } from "./utils/spatialHash";
 
 type Mode = "pan" | "draw";
 
@@ -29,6 +30,7 @@ function App() {
   const drawingStartCoords = useRef({ x: 0, y: 0 });
   const maxZIndex = useRef(0);
   const [cornerElements, updateCornerElementOnAdd, updateCornerElementOnDrag] = useCornerShapes();
+  const spatialHash = useRef(new SpatialHash<ShapeType>(500, 2));
 
   const handleShapeMouseDown = useCallback(
     (e: React.MouseEvent, shapeId: string) => {
@@ -74,6 +76,7 @@ function App() {
       prev.map((shape) => {
         if(shape.id === drawingShapeId) {
           const newShape = { ...shape, x, y, width, height };
+          spatialHash.current.update(shape.id, newShape);
           updateCornerElementOnAdd(newShape);
           return newShape;
         }
@@ -112,7 +115,9 @@ function App() {
     const deltaY = (e.clientY - lastCursorPos.current.y);
     setShapes((prev) => {
       const newShapes = [...prev];
-      newShapes[draggingShapeIndex] = { ...newShapes[draggingShapeIndex], x: newShapes[draggingShapeIndex].x + deltaX, y: newShapes[draggingShapeIndex].y + deltaY };
+      const newShape = { ...newShapes[draggingShapeIndex], x: newShapes[draggingShapeIndex].x + deltaX, y: newShapes[draggingShapeIndex].y + deltaY };
+      spatialHash.current.update(newShape.id, newShape);
+      newShapes[draggingShapeIndex] = newShape;
       updateCornerElementOnDrag(newShapes, draggingShapeIndex);
       return newShapes;
     });
@@ -149,6 +154,7 @@ function App() {
           zIndex: maxZIndex.current + 1,
         };
 
+        spatialHash.current.add(newShapeId, newShape);
         setShapes((prev) => [...prev, newShape]);
         setDrawingShapeId(newShapeId);
         drawingStartCoords.current = canvasCoords;
@@ -183,12 +189,13 @@ function App() {
   const handlePointerUp = useCallback(() => {
     if (drawingShapeId) {
       cancelUpdateDrawingShape();
-      const drawingShape = shapes[shapes.length - 1];
+      const drawingShape = shapes.find((s) => s.id === drawingShapeId);
       if (
         !drawingShape ||
         drawingShape.width <= 5 ||
         drawingShape.height <= 5
       ) {
+        spatialHash.current.remove(drawingShapeId);
         setShapes((prev) => prev.filter((s) => s.id !== drawingShapeId));
       }
 
@@ -228,12 +235,27 @@ function App() {
     };
   }, [shapes]);
 
+  const visibleShapes = useMemo(() => {
+    // Shapes are stored in canvas space, so the viewport has to be converted
+    // into it before querying.
+    const viewportOrigin = getCanvasCoordinates(0, 0);
+    return spatialHash.current.getItemsBetween(
+      viewportOrigin.x,
+      viewportOrigin.y,
+      window.innerWidth,
+      window.innerHeight
+    );
+  }, [getCanvasCoordinates, shapes]);
+
+  console.log(spatialHash.current, visibleShapes);
+
   return (
     <>
       <Toolbar
         onShapeSelect={handleShapeSelect}
         onReset={() => {
           setShapes([]);
+          spatialHash.current.clear();
         }}
       />
 
@@ -252,7 +274,7 @@ function App() {
             height: canvasBounds.height,
           }}
         >
-          {shapes.map((shape, index) => (
+          {visibleShapes.map((shape, index) => (
             <Shape
               key={shape.id}
               isDragging={draggingShapeIndex === index}
