@@ -286,8 +286,6 @@ function App() {
     );
   }, [getCanvasCoordinates, shapes]);
 
-  console.log(spatialHash.current, visibleShapes);
-
   return (
     <>
       <Toolbar
